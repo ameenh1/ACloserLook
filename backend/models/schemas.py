@@ -164,3 +164,63 @@ class IngredientsListResponse(BaseModel):
                 ]
             }
         }
+
+
+class BarcodeProduct(BaseModel):
+    """Product details retrieved from barcode lookup"""
+    id: int = Field(..., description="Product ID from database")
+    brand_name: str = Field(..., description="Brand name of the product")
+    barcode: str = Field(..., description="Product barcode")
+    ingredients: List[str] = Field(default_factory=list, description="List of ingredient names")
+    product_type: Optional[str] = Field(default=None, description="Type of product (e.g., tampon, pad)")
+    coverage_score: Optional[float] = Field(default=None, description="Research coverage score 0-1")
+    research_count: Optional[int] = Field(default=None, description="Number of research studies referenced")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "brand_name": "Pure Care",
+                "barcode": "012345678901",
+                "ingredients": ["Organic Cotton", "Viscose"],
+                "product_type": "tampon",
+                "coverage_score": 0.85,
+                "research_count": 12
+            }
+        }
+
+
+class BarcodeLookupRequest(BaseModel):
+    """Request body for barcode lookup endpoint"""
+    barcode: str = Field(..., description="Barcode to lookup", min_length=1)
+    user_id: Optional[str] = Field(default=None, description="Optional user ID for personalization")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "barcode": "012345678901",
+                "user_id": "user_123"
+            }
+        }
+
+
+class BarcodeLookupResponse(BaseModel):
+    """Response for successful barcode lookup"""
+    product: BarcodeProduct = Field(..., description="Product details")
+    found: bool = Field(default=True, description="Whether product was found in database")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "found": True,
+                "product": {
+                    "id": 1,
+                    "brand_name": "Pure Care",
+                    "barcode": "012345678901",
+                    "ingredients": ["Organic Cotton", "Viscose"],
+                    "product_type": "tampon",
+                    "coverage_score": 0.85,
+                    "research_count": 12
+                }
+            }
+        }
