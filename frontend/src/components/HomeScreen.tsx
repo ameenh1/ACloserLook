@@ -40,15 +40,16 @@ export default function HomeScreen({ onLogin, onCreateAccount }: HomeScreenProps
       </div>
       
       {/* Title */}
-      <p className="absolute font-['Konkhmer_Sleokchher:Regular',sans-serif] h-[60px] leading-[normal] left-[59px] not-italic text-[40px] text-white top-[256px] tracking-[-2px] w-[275px] whitespace-pre-wrap">A Closer Look</p>
+      <p className="absolute font-['Konkhmer_Sleokchher:Regular',sans-serif] font-extrabold h-[60px] leading-[normal] left-[59px] not-italic text-[40px] text-white top-[256px] tracking-[-2px] w-[275px] whitespace-pre-wrap text-center">A Closer Look</p>
       
       {/* Subtitle */}
-      <p className="absolute font-['Konkhmer_Sleokchher:Regular',sans-serif] h-[87px] leading-[normal] left-[79px] not-italic text-[13px] text-white top-[316px] tracking-[-0.65px] w-[236px] whitespace-pre-wrap">Know what you're putting down there</p>
+      <p className="absolute font-['Konkhmer_Sleokchher:Regular',sans-serif] font-extrabold h-[87px] leading-[normal] not-italic text-[13px] text-white top-[316px] tracking-[-0.65px] w-[236px] whitespace-pre-wrap text-center" style={{left: '50%', transform: 'translateX(-50%)'}}>Know what you're putting down there</p>
       
       {/* Login Button */}
       <button 
         onClick={onLogin}
-        className="absolute bg-[#a380a8] h-[40px] left-[120px] rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25),0px_4px_4px_0px_rgba(0,0,0,0.25)] top-[351px] w-[130px] hover:bg-[#8d6d91] transition-colors active:scale-95"
+        className="absolute bg-[#a380a8] h-[40px] rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25),0px_4px_4px_0px_rgba(0,0,0,0.25)] top-[351px] w-[130px] hover:bg-[#8d6d91] transition-colors active:scale-95"
+        style={{left: '50%', transform: 'translateX(-50%)'}}
       >
         <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] leading-[normal] not-italic text-[13px] text-white tracking-[-0.65px]">Login</p>
       </button>
@@ -56,7 +57,8 @@ export default function HomeScreen({ onLogin, onCreateAccount }: HomeScreenProps
       {/* Create Account Button */}
       <button 
         onClick={onCreateAccount}
-        className="absolute bg-[#a380a8] h-[40px] left-[120px] rounded-[10px] top-[403px] w-[130px] hover:bg-[#8d6d91] transition-colors active:scale-95"
+        className="absolute bg-[#a380a8] h-[40px] rounded-[10px] top-[403px] w-[130px] hover:bg-[#8d6d91] transition-colors active:scale-95"
+        style={{left: '50%', transform: 'translateX(-50%)'}}
       >
         <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] leading-[normal] not-italic text-[13px] text-white tracking-[-0.65px]">Create Account</p>
       </button>

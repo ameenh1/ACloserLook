@@ -34,7 +34,7 @@ export default function HomePageScreen({ onScanProduct, onLogout, onProfile }: H
       {/* Header */}
       <div className="absolute top-[60px] left-[24px] right-[24px] flex items-center justify-between z-10">
         <div>
-          <h1 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[28px] text-white tracking-[-1.5px]">A Closer Look</h1>
+          <h1 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] font-bold text-[28px] text-white tracking-[-1.5px]">A Closer Look</h1>
           <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white/70 tracking-[-0.6px] mt-1">Welcome back!</p>
         </div>
         <button
@@ -48,7 +48,7 @@ export default function HomePageScreen({ onScanProduct, onLogout, onProfile }: H
       {/* Main Content */}
       <div className="absolute top-[200px] left-[40px] right-[40px] z-10">
         <div className="text-center mb-12">
-          <h2 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[32px] text-white tracking-[-1.5px] leading-[0.9]">
+          <h2 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] font-bold text-[32px] text-white tracking-[-1.5px] leading-[0.9]">
             Know What You're<br />Using
           </h2>
           <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white/80 tracking-[-0.65px] mt-3">Scan any feminine care product to learn about its ingredients and safety</p>
