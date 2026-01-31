@@ -1,0 +1,649 @@
+{
+  "total_brands": 20,
+  "successfully_processed": 20,
+  "products": [
+    {
+      "brand_name": "Always Ultra Thin",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3,
+        1,
+        5
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        },
+        {
+          "id": 1,
+          "name": "Fragrance",
+          "description": "Synthetic fragrance compounds used to mask odors in period products. May contain undisclosed chemicals that can trigger allergic reactions, skin irritation, and reproductive health concerns. Studies suggest fragrance additives increase risk of vulvovaginal irritation and bacterial imbalance.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:27.878673"
+        },
+        {
+          "id": 5,
+          "name": "Chlorine",
+          "description": "Bleaching agent used to whiten pad materials and improve absorbency. Creates toxic dioxin residues that persist in products. Chlorine exposure during manufacturing creates environmental hazards and consumer health risks through skin absorption.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:22.107380"
+        }
+      ],
+      "coverage_score": 0.8,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Always Maxi",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3,
+        1,
+        5
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        },
+        {
+          "id": 1,
+          "name": "Fragrance",
+          "description": "Synthetic fragrance compounds used to mask odors in period products. May contain undisclosed chemicals that can trigger allergic reactions, skin irritation, and reproductive health concerns. Studies suggest fragrance additives increase risk of vulvovaginal irritation and bacterial imbalance.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:27.878673"
+        },
+        {
+          "id": 5,
+          "name": "Chlorine",
+          "description": "Bleaching agent used to whiten pad materials and improve absorbency. Creates toxic dioxin residues that persist in products. Chlorine exposure during manufacturing creates environmental hazards and consumer health risks through skin absorption.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:22.107380"
+        }
+      ],
+      "coverage_score": 0.8,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Tampax Pearl Regular",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3,
+        1
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        },
+        {
+          "id": 1,
+          "name": "Fragrance",
+          "description": "Synthetic fragrance compounds used to mask odors in period products. May contain undisclosed chemicals that can trigger allergic reactions, skin irritation, and reproductive health concerns. Studies suggest fragrance additives increase risk of vulvovaginal irritation and bacterial imbalance.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:27.878673"
+        }
+      ],
+      "coverage_score": 0.75,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Tampax Pearl Super",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3,
+        1
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        },
+        {
+          "id": 1,
+          "name": "Fragrance",
+          "description": "Synthetic fragrance compounds used to mask odors in period products. May contain undisclosed chemicals that can trigger allergic reactions, skin irritation, and reproductive health concerns. Studies suggest fragrance additives increase risk of vulvovaginal irritation and bacterial imbalance.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:27.878673"
+        }
+      ],
+      "coverage_score": 0.75,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Kotex U Ultra Thin",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3,
+        1,
+        27
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        },
+        {
+          "id": 1,
+          "name": "Fragrance",
+          "description": "Synthetic fragrance compounds used to mask odors in period products. May contain undisclosed chemicals that can trigger allergic reactions, skin irritation, and reproductive health concerns. Studies suggest fragrance additives increase risk of vulvovaginal irritation and bacterial imbalance.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:27.878673"
+        },
+        {
+          "id": 27,
+          "name": "Wood Pulp (Unbleached)",
+          "description": "Natural cellulose fiber from wood used in absorbent core without chemical bleaching. Maintains structural integrity while avoiding toxic bleaching byproducts. Biodegradable and environmentally sustainable alternative to synthetic fibers.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:27.977475"
+        }
+      ],
+      "coverage_score": 1.0,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Kotex Security Regular",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3,
+        1,
+        27
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        },
+        {
+          "id": 1,
+          "name": "Fragrance",
+          "description": "Synthetic fragrance compounds used to mask odors in period products. May contain undisclosed chemicals that can trigger allergic reactions, skin irritation, and reproductive health concerns. Studies suggest fragrance additives increase risk of vulvovaginal irritation and bacterial imbalance.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:27.878673"
+        },
+        {
+          "id": 27,
+          "name": "Wood Pulp (Unbleached)",
+          "description": "Natural cellulose fiber from wood used in absorbent core without chemical bleaching. Maintains structural integrity while avoiding toxic bleaching byproducts. Biodegradable and environmentally sustainable alternative to synthetic fibers.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:27.977475"
+        }
+      ],
+      "coverage_score": 1.0,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Honey Pot Organic",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        }
+      ],
+      "coverage_score": 1.0,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Natracare Organic",
+      "product_type": "liner",
+      "ingredients": [
+        16
+      ],
+      "ingredient_details": [
+        {
+          "id": 16,
+          "name": "Organic Cotton",
+          "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:38.153500"
+        }
+      ],
+      "coverage_score": 0.3333333333333333,
+      "research_count": 0,
+      "status": "review_needed"
+    },
+    {
+      "brand_name": "Seventh Generation Free",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        }
+      ],
+      "coverage_score": 1.0,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Cora Organic",
+      "product_type": "liner",
+      "ingredients": [
+        16
+      ],
+      "ingredient_details": [
+        {
+          "id": 16,
+          "name": "Organic Cotton",
+          "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:38.153500"
+        }
+      ],
+      "coverage_score": 0.5,
+      "research_count": 0,
+      "status": "review_needed"
+    },
+    {
+      "brand_name": "Rael Organic",
+      "product_type": "liner",
+      "ingredients": [
+        16
+      ],
+      "ingredient_details": [
+        {
+          "id": 16,
+          "name": "Organic Cotton",
+          "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:38.153500"
+        }
+      ],
+      "coverage_score": 0.5,
+      "research_count": 0,
+      "status": "review_needed"
+    },
+    {
+      "brand_name": "August Pads",
+      "product_type": "pad",
+      "ingredients": [
+        16
+      ],
+      "ingredient_details": [
+        {
+          "id": 16,
+          "name": "Organic Cotton",
+          "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:38.153500"
+        }
+      ],
+      "coverage_score": 0.5,
+      "research_count": 0,
+      "status": "review_needed"
+    },
+    {
+      "brand_name": "Veeda 100% Cotton",
+      "product_type": "liner",
+      "ingredients": [
+        16
+      ],
+      "ingredient_details": [
+        {
+          "id": 16,
+          "name": "Organic Cotton",
+          "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:38.153500"
+        }
+      ],
+      "coverage_score": 0.5,
+      "research_count": 0,
+      "status": "review_needed"
+    },
+    {
+      "brand_name": "Lola Organic",
+      "product_type": "liner",
+      "ingredients": [
+        16
+      ],
+      "ingredient_details": [
+        {
+          "id": 16,
+          "name": "Organic Cotton",
+          "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:38.153500"
+        }
+      ],
+      "coverage_score": 0.5,
+      "research_count": 0,
+      "status": "review_needed"
+    },
+    {
+      "brand_name": "The Honey Pot Company",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        }
+      ],
+      "coverage_score": 1.0,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Organyc Organic",
+      "product_type": "liner",
+      "ingredients": [
+        16
+      ],
+      "ingredient_details": [
+        {
+          "id": 16,
+          "name": "Organic Cotton",
+          "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:38.153500"
+        }
+      ],
+      "coverage_score": 0.5,
+      "research_count": 0,
+      "status": "review_needed"
+    },
+    {
+      "brand_name": "Playtex Gentle Glide",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        }
+      ],
+      "coverage_score": 1.0,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "OB Tampons",
+      "product_type": "tampon",
+      "ingredients": [
+        2,
+        16
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 16,
+          "name": "Organic Cotton",
+          "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+          "risk_level": "Low",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:38.153500"
+        }
+      ],
+      "coverage_score": 1.0,
+      "research_count": 0,
+      "status": "ready"
+    },
+    {
+      "brand_name": "Carefree Panty Liners",
+      "product_type": "liner",
+      "ingredients": [
+        3
+      ],
+      "ingredient_details": [
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        }
+      ],
+      "coverage_score": 0.5,
+      "research_count": 0,
+      "status": "review_needed"
+    },
+    {
+      "brand_name": "U by Kotex",
+      "product_type": "liner",
+      "ingredients": [
+        2,
+        3
+      ],
+      "ingredient_details": [
+        {
+          "id": 2,
+          "name": "Rayon",
+          "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.319261"
+        },
+        {
+          "id": 3,
+          "name": "Polyester",
+          "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+          "risk_level": "High",
+          "research_studies": [],
+          "research_count": 0,
+          "last_enriched": "2026-01-31T15:18:39.538026"
+        }
+      ],
+      "coverage_score": 1.0,
+      "research_count": 0,
+      "status": "ready"
+    }
+  ],
+  "total_ingredients_linked": 42,
+  "total_research_links": 0,
+  "errors": []
+}

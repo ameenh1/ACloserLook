@@ -1,0 +1,268 @@
+name: Vercel Deploy & Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  PYTHON_VERSION: '3.11'
+  BACKEND_DIR: './backend'
+
+jobs:
+  # Job 1: Run tests on all pushes and PRs
+  test:
+    name: Run Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Lint with pylint
+        continue-on-error: true
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          pip install pylint
+          pylint **/*.py --exit-zero --disable=C0111,C0103,R0913 || true
+      
+      - name: Run unit tests
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL_TEST }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY_TEST }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_TEST }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_TEST }}
+          ENVIRONMENT: test
+          DEBUG: 'false'
+        run: |
+          cd ${{ env.BACKEND_DIR }}
+          pytest tests/ -v --cov=. --cov-report=term-only --cov-report=xml
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        continue-on-error: true
+        with:
+          file: ${{ env.BACKEND_DIR }}/coverage.xml
+          fail_ci_if_error: false
+          verbose: true
+
+  # Job 2: Build and push Docker image (optional - for future use)
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.BACKEND_DIR }}
+          file: ${{ env.BACKEND_DIR }}/deploy/docker/Dockerfile
+          push: false
+          tags: lotus-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Job 3: Deploy to Vercel (production only)
+  deploy-vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    environment:
+      name: vercel
+      url: ${{ steps.deploy.outputs.deployment_url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel (Main Branch)
+        if: github.ref == 'refs/heads/main'
+        id: deploy
+        uses: BetaHuhn/deploy-to-vercel-action@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          PRODUCTION: true
+      
+      - name: Deploy to Vercel (Preview - Develop Branch)
+        if: github.ref == 'refs/heads/develop'
+        id: deploy-preview
+        uses: BetaHuhn/deploy-to-vercel-action@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PREVIEW }}
+          PRODUCTION: false
+      
+      - name: Comment PR with deployment URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 Preview deployment ready at: ${{ steps.deploy-preview.outputs.deployment_url }}`
+            })
+
+  # Job 4: Health check after deployment
+  health-check:
+    name: Verify Deployment Health
+    runs-on: ubuntu-latest
+    needs: deploy-vercel
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get Vercel deployment URL
+        id: get-url
+        run: |
+          echo "DEPLOYMENT_URL=${{ secrets.VERCEL_DEPLOYMENT_URL }}" >> $GITHUB_OUTPUT
+      
+      - name: Health check endpoint
+        run: |
+          max_attempts=10
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Health check attempt $attempt/$max_attempts..."
+            
+            status=$(curl -s -o /dev/null -w "%{http_code}" \
+              https://${{ secrets.VERCEL_DEPLOYMENT_URL }}/health)
+            
+            if [ "$status" = "200" ]; then
+              echo "✓ Health check passed (HTTP $status)"
+              exit 0
+            else
+              echo "✗ Health check failed (HTTP $status)"
+              attempt=$((attempt + 1))
+              if [ $attempt -le $max_attempts ]; then
+                sleep 5
+              fi
+            fi
+          done
+          
+          echo "✗ Health check failed after $max_attempts attempts"
+          exit 1
+      
+      - name: Readiness check endpoint
+        run: |
+          response=$(curl -s https://${{ secrets.VERCEL_DEPLOYMENT_URL }}/ready)
+          
+          if echo "$response" | grep -q '"ready":true'; then
+            echo "✓ Readiness check passed"
+          else
+            echo "✗ Readiness check failed"
+            echo "$response"
+            exit 1
+          fi
+      
+      - name: Send Slack notification on success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "✅ Lotus Backend deployed successfully to production",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*✅ Lotus Backend Deployment Successful*\n*Commit:* ${{ github.sha }}\n*URL:* https://${{ secrets.VERCEL_DEPLOYMENT_URL }}\n*Health:* ✓ Healthy\n*Ready:* ✓ Ready"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Send Slack notification on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "❌ Lotus Backend deployment failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*❌ Lotus Backend Deployment Failed*\n*Commit:* ${{ github.sha }}\n*Check logs:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Job 5: Notify on completion
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [test, deploy-vercel]
+    if: always()
+    
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [ "${{ needs.test.result }}" = "success" ] && [ "${{ needs.deploy-vercel.result }}" = "success" ]; then
+            echo "status=✅ All checks passed" >> $GITHUB_OUTPUT
+          else
+            echo "status=⚠️ Some checks failed" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Check deployment status
+        run: |
+          echo "Test status: ${{ needs.test.result }}"
+          echo "Deployment status: ${{ needs.deploy-vercel.result }}"
+          echo "Overall: ${{ steps.status.outputs.status }}"

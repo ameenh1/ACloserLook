@@ -1,0 +1,184 @@
+{
+  "ingredients": [
+    {
+      "id": 1,
+      "name": "Fragrance",
+      "description": "Synthetic fragrance compounds used to mask odors in period products. May contain undisclosed chemicals that can trigger allergic reactions, skin irritation, and reproductive health concerns. Studies suggest fragrance additives increase risk of vulvovaginal irritation and bacterial imbalance.",
+      "risk_level": "High"
+    },
+    {
+      "id": 2,
+      "name": "Rayon",
+      "description": "Cellulose-based synthetic fiber commonly used in pad absorbent cores. Produced through chemical-intensive processes involving sodium hydroxide and carbon disulfide. Rayon can harbor bacteria and reduce vaginal moisture, potentially increasing toxic shock syndrome risk.",
+      "risk_level": "High"
+    },
+    {
+      "id": 3,
+      "name": "Polyester",
+      "description": "Petroleum-derived plastic polymer used in pad backing and liners. Non-biodegradable and may release microplastics over time. Creates moisture-trapping barrier that prevents natural airflow and promotes yeast growth and bacterial overgrowth.",
+      "risk_level": "High"
+    },
+    {
+      "id": 4,
+      "name": "Dioxins",
+      "description": "Highly toxic chlorine byproducts formed during paper bleaching in pad manufacturing. Classified as probable human carcinogens by EPA. Dioxins accumulate in body fat and can disrupt endocrine function, affecting reproductive health and hormone balance.",
+      "risk_level": "High"
+    },
+    {
+      "id": 5,
+      "name": "Chlorine",
+      "description": "Bleaching agent used to whiten pad materials and improve absorbency. Creates toxic dioxin residues that persist in products. Chlorine exposure during manufacturing creates environmental hazards and consumer health risks through skin absorption.",
+      "risk_level": "High"
+    },
+    {
+      "id": 6,
+      "name": "Viscose",
+      "description": "Semi-synthetic fiber derived from wood pulp via chemical processing. Often treated with additional chemicals for absorbency and durability. Can contribute to vaginal pH disruption and create environment favorable for harmful bacteria and yeast proliferation.",
+      "risk_level": "Medium"
+    },
+    {
+      "id": 7,
+      "name": "Cottonseed Oil",
+      "description": "Oil extracted from cotton seeds often containing pesticide residues. Used in some natural pad formulations as lubricant or conditioning agent. May cause allergic reactions in sensitive individuals and contribute to skin barrier disruption.",
+      "risk_level": "Medium"
+    },
+    {
+      "id": 8,
+      "name": "Aloe Vera",
+      "description": "Plant-derived botanical known for soothing and moisturizing properties. Generally recognized as safe with minimal irritation potential. Provides natural anti-inflammatory benefits and supports skin healing without harsh chemical additives.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 9,
+      "name": "Tea Tree Oil",
+      "description": "Essential oil with natural antimicrobial and antifungal properties from Melaleuca tree. Helps prevent bacterial overgrowth and yeast infections when used appropriately. Should be properly diluted to avoid skin sensitization or irritation.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 10,
+      "name": "Titanium Dioxide",
+      "description": "White mineral pigment used for opacity and color in pads. Previously concerning for nanoparticle inhalation but modern formulations are well-regulated. Minimal absorption through skin when used topically in pad applications.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 11,
+      "name": "Phthalates",
+      "description": "Plasticizers added to flexible plastics to increase durability and flexibility in pad backing. Known endocrine disruptors that can leach into body tissues. Associated with reproductive harm, developmental issues, and hormonal imbalances in long-term exposure.",
+      "risk_level": "High"
+    },
+    {
+      "id": 12,
+      "name": "Bisphenol A (BPA)",
+      "description": "Chemical used in polycarbonate plastics and epoxy resins found in some pad adhesives and packaging. Endocrine-disrupting compound that mimics estrogen in body. Linked to reproductive issues, increased miscarriage risk, and developmental abnormalities.",
+      "risk_level": "High"
+    },
+    {
+      "id": 13,
+      "name": "Sodium Polyacrylate",
+      "description": "Super-absorbent polymer used in modern pad cores to increase fluid absorption capacity. Non-biodegradable synthetic material that can cause irritation if it escapes the pad. May contribute to vaginal dryness and alter natural moisture balance.",
+      "risk_level": "Medium"
+    },
+    {
+      "id": 14,
+      "name": "Pesticide Residues",
+      "description": "Chemical pesticides and herbicides remaining on conventional cotton used in pads. Includes glyphosate and neonicotinoids that persist in textile fibers. Prolonged contact with skin can cause allergic reactions and systemic absorption of toxic compounds.",
+      "risk_level": "High"
+    },
+    {
+      "id": 15,
+      "name": "Formaldehyde",
+      "description": "Preservative and hardening agent used in some pad manufacturing processes. Known carcinogen classified by IARC and can off-gas from products. Causes respiratory irritation, contact dermatitis, and has been linked to cancer risk with chronic exposure.",
+      "risk_level": "High"
+    },
+    {
+      "id": 16,
+      "name": "Organic Cotton",
+      "description": "Cotton grown without synthetic pesticides or fertilizers using sustainable farming methods. Significantly reduces chemical exposure compared to conventional cotton. Provides natural breathability and hypoallergenic properties beneficial for sensitive skin.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 17,
+      "name": "Bamboo Viscose",
+      "description": "Viscose fiber derived from bamboo pulp with reduced environmental impact compared to tree-based viscose. Naturally antibacterial properties help maintain healthy vaginal flora. Must be processed responsibly to minimize chemical residues.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 18,
+      "name": "Lavender Extract",
+      "description": "Natural botanical extract from lavender flowers with calming and antimicrobial properties. Generally safe for topical use with minimal risk of irritation. Supports skin healing and provides pleasant scent without synthetic fragrance chemicals.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 19,
+      "name": "Chlorine Dioxide",
+      "description": "Bleaching agent alternative to chlorine gas that creates fewer dioxin byproducts. Still generates some toxic residues during manufacturing process. More environmentally friendly than traditional chlorine but carries moderate health concerns.",
+      "risk_level": "Medium"
+    },
+    {
+      "id": 20,
+      "name": "Talc",
+      "description": "Mineral powder historically used to reduce sticking in pads but now largely phased out. Asbestos contamination risk in mined talc poses serious health hazards. Associated with ovarian cancer when applied to genital area due to potential carcinogenic mineral fibers.",
+      "risk_level": "High"
+    },
+    {
+      "id": 21,
+      "name": "Chamomile Extract",
+      "description": "Botanical extract from chamomile flowers with soothing and anti-inflammatory properties. Safe for sensitive vaginal skin with proven calming effects. Supports natural skin barrier function without disrupting pH balance or healthy microbiome.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 22,
+      "name": "Zinc Oxide",
+      "description": "Mineral compound providing barrier protection and skin soothing benefits. Well-tolerated topical ingredient used in dermatological products. Helps reduce chafing and irritation while remaining inert on skin surface without systemic absorption.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 23,
+      "name": "Triclosan",
+      "description": "Antimicrobial compound added to some pads to reduce bacteria growth. Bioaccumulates in body tissues and disrupts hormonal function. FDA restricted triclosan use in consumer products due to insufficient safety data and endocrine disruption concerns.",
+      "risk_level": "High"
+    },
+    {
+      "id": 24,
+      "name": "Chloroform Residues",
+      "description": "Toxic byproduct of chlorine bleaching that can remain in pad materials. Classified as possible carcinogen and anesthetic agent. Chronic exposure through skin contact raises cancer risk and neurological concerns with prolonged use.",
+      "risk_level": "High"
+    },
+    {
+      "id": 25,
+      "name": "Calendula Extract",
+      "description": "Botanical extract from calendula flowers known for wound healing and skin regeneration. Anti-inflammatory and antimicrobial properties support vaginal health. Safely used in sensitive skincare with centuries of traditional use supporting efficacy.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 26,
+      "name": "Ethylene Glycol",
+      "description": "Synthetic compound used in some pad adhesives and coatings for flexibility. Can penetrate skin and cause systemic toxicity at high exposures. May disrupt endocrine function and affect reproductive health through prolonged contact.",
+      "risk_level": "Medium"
+    },
+    {
+      "id": 27,
+      "name": "Wood Pulp (Unbleached)",
+      "description": "Natural cellulose fiber from wood used in absorbent core without chemical bleaching. Maintains structural integrity while avoiding toxic bleaching byproducts. Biodegradable and environmentally sustainable alternative to synthetic fibers.",
+      "risk_level": "Low"
+    },
+    {
+      "id": 28,
+      "name": "Synthetic Fragrances",
+      "description": "Complex chemical mixtures designed to mimic natural scents but composed of petroleum-derived compounds. Often contain phthalates and other endocrine disruptors unlisted on labels. Accumulate in body tissues and linked to reproductive and developmental harm.",
+      "risk_level": "High"
+    },
+    {
+      "id": 29,
+      "name": "PE Plastic (Polyethylene)",
+      "description": "Common plastic material used in pad backings and wrappers. While generally inert, micro-plastic particles can shed and accumulate in body tissues. Non-biodegradable with long environmental persistence causing ecological harm.",
+      "risk_level": "Medium"
+    },
+    {
+      "id": 30,
+      "name": "Rose Hip Seed Oil",
+      "description": "Natural oil rich in vitamins and antioxidants supporting skin health and regeneration. Non-comedogenic and deeply nourishing without clogging pores or disrupting vaginal pH. Promotes skin barrier function and reduces inflammation naturally.",
+      "risk_level": "Low"
+    }
+  ]
+}
