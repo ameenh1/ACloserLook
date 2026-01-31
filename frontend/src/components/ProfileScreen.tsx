@@ -140,10 +140,15 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
       }
 
       setSaveMessage({ type: 'success', text: 'Profile saved successfully!' });
+      
+      // Navigate back to homepage after a brief delay to show success message
+      // Keep isSaving true so button stays in "Saving" state until navigation
+      setTimeout(() => {
+        onBack();
+      }, 800);
     } catch (err) {
       console.error('Error saving profile:', err);
       setSaveMessage({ type: 'error', text: 'An error occurred. Please try again.' });
-    } finally {
       setIsSaving(false);
     }
   };
