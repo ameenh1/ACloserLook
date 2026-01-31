@@ -57,7 +57,8 @@ class RequestIDMiddleware:
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             # Generate or retrieve request ID
-            request_id = scope.get("headers", {}).get(b"x-request-id", b"").decode() or str(uuid.uuid4())
+            headers = dict(scope.get("headers", []))
+            request_id = headers.get(b"x-request-id", b"").decode() or str(uuid.uuid4())
             scope["request_id"] = request_id
             
             # Add to logs

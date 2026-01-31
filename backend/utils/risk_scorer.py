@@ -343,3 +343,68 @@ def _extract_risky_ingredients(
             })
     
     return risky_items
+
+
+async def generate_risk_score_for_product(
+    product_id: int,
+    product_name: str,
+    ingredients: list,
+    user_id: str
+) -> dict:
+    """
+    Generate personalized health risk score for a product (barcode-based)
+    Uses product ingredients directly (no OCR needed)
+    Orchestrates: User Profile → Vector Search → LLM Analysis
+    
+    Args:
+        product_id: Product ID from database
+        product_name: Product brand name
+        ingredients: List of ingredient names (already resolved from product record)
+        user_id: User identifier for fetching profile and sensitivities
+        
+    Returns:
+        Dict containing:
+        - risk_level: "Low Risk | Caution | High Risk"
+        - explanation: 2-sentence assessment
+        - risky_ingredients: List of dicts with name, risk_level, reason
+        
+    Raises:
+        RiskScorerError: If any step in pipeline fails
+    """
+    try:
+        logger.info(f"Starting risk assessment for product: {product_name} (ID: {product_id})")
+        
+        # Step 1: Fetch user profile and sensitivities from Supabase
+        logger.debug("Step 1: Fetching user profile and sensitivities")
+        user_sensitivities = await _fetch_user_sensitivities(user_id)
+        logger.debug(f"User sensitivities: {user_sensitivities}")
+        
+        # Step 2: Search for each ingredient in vector store
+        logger.debug("Step 2: Searching vector store for ingredient context")
+        retrieved_vector_data = await _search_all_ingredients(ingredients)
+        logger.debug(f"Retrieved {len(retrieved_vector_data)} similar ingredients from vector store")
+        
+        # Step 3: Send to OpenAI LLM for risk assessment
+        logger.debug("Step 3: Sending to LLM for risk assessment")
+        risk_assessment = await _generate_llm_assessment(
+            ingredients,
+            user_sensitivities,
+            retrieved_vector_data
+        )
+        
+        logger.info(f"Risk assessment completed. Level: {risk_assessment.get('overall_risk_level')}")
+        
+        # Step 4: Format response
+        response = {
+            "risk_level": _normalize_risk_level(risk_assessment.get("overall_risk_level", "Caution")),
+            "explanation": risk_assessment.get("explanation", "Unable to generate assessment"),
+            "risky_ingredients": _extract_risky_ingredients(risk_assessment.get("ingredient_details", []))
+        }
+        
+        return response
+    
+    except RiskScorerError:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in risk scoring pipeline: {e}")
+        raise RiskScorerError(f"Risk scoring failed: {e}")
