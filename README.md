@@ -1,4 +1,4 @@
-# ACloserLook
+# A Closer Look
 
 Initial commit: project files imported from local workspace.
 
