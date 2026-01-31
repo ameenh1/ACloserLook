@@ -23,8 +23,12 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
     endometriosis: false,
     pcos: false,
     vulvodynia: false,
-    lichenSclerosus: false,
-    phSensitivity: false
+    vaginitis: false,
+    uti: false,
+    cervicitis: false,
+    vaginalAtrophy: false,
+    pid: false,
+    other: ""
   });
 
   // Preferences State
@@ -139,20 +143,23 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
           {/* Conditions Section */}
           <div className="bg-white/5 border border-white/10 rounded-[16px] p-5">
             <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-3">Health Conditions</h3>
-            <div className="space-y-2">
+            <div className="space-y-2 mb-3">
               {[
                 { key: "bv", label: "Bacterial Vaginosis (BV)" },
-                { key: "yeastInfections", label: "Recurring Yeast Infections" },
+                { key: "yeastInfections", label: "Yeast Infections" },
                 { key: "endometriosis", label: "Endometriosis" },
                 { key: "pcos", label: "PCOS" },
                 { key: "vulvodynia", label: "Vulvodynia" },
-                { key: "lichenSclerosus", label: "Lichen Sclerosus" },
-                { key: "phSensitivity", label: "pH Sensitivity" }
+                { key: "vaginitis", label: "Vaginitis" },
+                { key: "uti", label: "Urinary Tract Infections (UTI)" },
+                { key: "cervicitis", label: "Cervicitis" },
+                { key: "vaginalAtrophy", label: "Vaginal Atrophy" },
+                { key: "pid", label: "Pelvic Inflammatory Disease (PID)" }
               ].map(({ key, label }) => (
                 <label key={key} className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={conditions[key as keyof typeof conditions]}
+                    checked={conditions[key as keyof typeof conditions] as boolean}
                     onChange={(e) => setConditions({ ...conditions, [key]: e.target.checked })}
                     className="accent-[#a380a8] w-4 h-4"
                   />
@@ -160,6 +167,13 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
                 </label>
               ))}
             </div>
+            <input
+              type="text"
+              placeholder="Other conditions (comma separated)"
+              value={conditions.other}
+              onChange={(e) => setConditions({ ...conditions, other: e.target.value })}
+              className="w-full h-[40px] bg-white/10 border border-white/20 rounded-[10px] px-4 text-white text-[13px] placeholder:text-white/40 focus:outline-none focus:border-[#a380a8] focus:bg-white/15 transition-all"
+            />
           </div>
 
           {/* Preferences Section */}
