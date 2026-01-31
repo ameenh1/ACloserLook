@@ -1,7 +1,8 @@
 import { useState } from "react";
 import img1 from "figma:asset/e153f9d3e6a9dfd2dd435434c4341330f8e8ab0c.png";
 import img11 from "figma:asset/15822d0d5d333944328a5265ff0f4b30240d07a8.png";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 interface LoginScreenProps {
   onBack: () => void;
@@ -11,15 +12,36 @@ interface LoginScreenProps {
 export default function LoginScreen({ onBack, onLoginSuccess }: LoginScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login functionality
-    console.log("Login attempt with:", { email, password });
-    if (onLoginSuccess) {
-      onLoginSuccess();
-    } else {
-      alert("Login successful! (Demo mode)");
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        setError(signInError.message);
+        return;
+      }
+
+      if (data.user) {
+        console.log("Login successful:", data.user);
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        }
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error("Login error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,12 +113,23 @@ export default function LoginScreen({ onBack, onLoginSuccess }: LoginScreenProps
             </button>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 rounded-[10px] bg-red-500/20 text-red-300 border border-red-500/30 text-center font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] tracking-[-0.6px]">
+              {error}
+            </div>
+          )}
+
           {/* Login Button */}
           <button
             type="submit"
-            className="w-full h-[45px] bg-[#a380a8] rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] hover:bg-[#8d6d91] transition-colors active:scale-95 mt-4"
+            disabled={isLoading}
+            className="w-full h-[45px] bg-[#a380a8] rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] hover:bg-[#8d6d91] transition-colors active:scale-95 mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white tracking-[-0.65px]">Sign In</p>
+            {isLoading && <Loader2 size={18} className="text-white animate-spin" />}
+            <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white tracking-[-0.65px]">
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </p>
           </button>
 
           {/* Divider */}

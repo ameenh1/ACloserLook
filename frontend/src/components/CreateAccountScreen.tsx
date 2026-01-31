@@ -1,7 +1,8 @@
 import { useState } from "react";
 import img3 from "figma:asset/d4d40c58bbd603e907bcf97d939af54f73bf95c2.png";
 import img6 from "figma:asset/6e4a41e6bc8c632007a3be70ab1f910b722fc541.png";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 interface CreateAccountScreenProps {
   onBack: () => void;
@@ -13,21 +14,53 @@ export default function CreateAccountScreen({ onBack, onAccountCreated }: Create
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleCreateAccount = (e: React.FormEvent) => {
+  const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     if (password !== confirmPassword) {
-      alert("Passwords don't match!");
+      setError("Passwords don't match!");
       return;
     }
-    
-    // Mock account creation functionality
-    console.log("Account creation attempt with:", { name, email, password });
-    if (onAccountCreated) {
-      onAccountCreated();
-    } else {
-      alert("Account created successfully! (Demo mode)");
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Create user with Supabase Auth
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          }
+        }
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+
+      if (data.user) {
+        console.log("Account created successfully:", data.user);
+        if (onAccountCreated) {
+          onAccountCreated();
+        }
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error("Sign up error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -132,12 +165,23 @@ export default function CreateAccountScreen({ onBack, onAccountCreated }: Create
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 rounded-[10px] bg-red-500/20 text-red-300 border border-red-500/30 text-center font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] tracking-[-0.6px]">
+              {error}
+            </div>
+          )}
+
           {/* Create Account Button */}
           <button
             type="submit"
-            className="w-full h-[45px] bg-[#a380a8] rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] hover:bg-[#8d6d91] transition-colors active:scale-95 mt-4"
+            disabled={isLoading}
+            className="w-full h-[45px] bg-[#a380a8] rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] hover:bg-[#8d6d91] transition-colors active:scale-95 mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white tracking-[-0.65px]">Create Account</p>
+            {isLoading && <Loader2 size={18} className="text-white animate-spin" />}
+            <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white tracking-[-0.65px]">
+              {isLoading ? 'Creating Account...' : 'Create Account'}
+            </p>
           </button>
 
           {/* Divider */}

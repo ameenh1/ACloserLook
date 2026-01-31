@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import img1 from "figma:asset/e153f9d3e6a9dfd2dd435434c4341330f8e8ab0c.png";
 import img11 from "figma:asset/15822d0d5d333944328a5265ff0f4b30240d07a8.png";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Check } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 interface ProfileScreenProps {
   onBack: () => void;
 }
 
 export default function ProfileScreen({ onBack }: ProfileScreenProps) {
+  // Loading & Status States
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   // Health Profile State
   const [skinType, setSkinType] = useState("");
   const [allergies, setAllergies] = useState({
@@ -40,17 +46,106 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
   });
   const [priceRange, setPriceRange] = useState("");
 
-  const handleSave = () => {
-    const profileData = {
-      skinType,
-      allergies,
-      conditions,
-      preferences,
-      priceRange
-    };
-    console.log("Saving profile:", profileData);
-    // Here you would save to your backend/database
-    alert("Health profile saved successfully!");
+  // Load profile on mount
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  // Auto-hide save message after 3 seconds
+  useEffect(() => {
+    if (saveMessage) {
+      const timer = setTimeout(() => setSaveMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveMessage]);
+
+  const loadProfile = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get the currently logged-in user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('No user logged in');
+        setIsLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+        console.error('Error loading profile:', error);
+        return;
+      }
+
+      if (data) {
+        // Restore saved data
+        setSkinType(data.skin_type || "");
+        setPriceRange(data.price_range || "");
+        
+        if (data.allergies) {
+          setAllergies(data.allergies);
+        }
+        if (data.conditions) {
+          setConditions(data.conditions);
+        }
+        if (data.preferences) {
+          setPreferences(data.preferences);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      setSaveMessage(null);
+
+      // Get the currently logged-in user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setSaveMessage({ type: 'error', text: 'Please log in to save your profile.' });
+        return;
+      }
+
+      const profileData = {
+        user_id: user.id,
+        skin_type: skinType,
+        allergies,
+        conditions,
+        preferences,
+        price_range: priceRange,
+        updated_at: new Date().toISOString()
+      };
+
+      // Upsert (insert or update) the profile
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(profileData, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error('Error saving profile:', error);
+        setSaveMessage({ type: 'error', text: 'Failed to save. Please try again.' });
+        return;
+      }
+
+      setSaveMessage({ type: 'success', text: 'Profile saved successfully!' });
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      setSaveMessage({ type: 'error', text: 'An error occurred. Please try again.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -74,10 +169,10 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
       </div>
 
       {/* Header */}
-      <div className="absolute top-[110px] left-[24px] right-[24px] z-10">
+      <div className="absolute top-[80px] left-[24px] right-[24px] z-10">
         <button 
           onClick={onBack}
-          className="text-white flex items-center gap-2 hover:text-[#a380a8] transition-colors mb-4"
+          className="text-white flex items-center gap-2 hover:text-[#a380a8] transition-colors mb-3"
         >
           <ArrowLeft size={24} />
           <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] tracking-[-0.65px]">Back</span>
@@ -95,17 +190,19 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
             <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-3">Skin Type</h3>
             <div className="space-y-2">
               {["Normal", "Sensitive", "Very Sensitive", "Allergy-Prone"].map((type) => (
-                <label key={type} className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="skinType"
-                    value={type}
-                    checked={skinType === type}
-                    onChange={(e) => setSkinType(e.target.value)}
-                    className="accent-[#a380a8] w-4 h-4"
-                  />
-                  <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white/90 tracking-[-0.65px]">{type}</span>
-                </label>
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setSkinType(type)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-[10px] transition-all ${
+                    skinType === type
+                      ? 'bg-[#a380a8] border border-[#a380a8]'
+                      : 'bg-white/10 border border-white/20 hover:bg-white/15'
+                  }`}
+                >
+                  <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white tracking-[-0.65px]">{type}</span>
+                  {skinType === type && <Check size={16} className="text-white" />}
+                </button>
               ))}
             </div>
           </div>
@@ -119,17 +216,24 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
                 { key: "latex", label: "Latex" },
                 { key: "dyes", label: "Dyes/Colors" },
                 { key: "rayon", label: "Rayon" }
-              ].map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={allergies[key as keyof typeof allergies] as boolean}
-                    onChange={(e) => setAllergies({ ...allergies, [key]: e.target.checked })}
-                    className="accent-[#a380a8] w-4 h-4"
-                  />
-                  <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white/90 tracking-[-0.65px]">{label}</span>
-                </label>
-              ))}
+              ].map(({ key, label }) => {
+                const isSelected = allergies[key as keyof typeof allergies] as boolean;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setAllergies({ ...allergies, [key]: !isSelected })}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-[10px] transition-all ${
+                      isSelected
+                        ? 'bg-[#a380a8] border border-[#a380a8]'
+                        : 'bg-white/10 border border-white/20 hover:bg-white/15'
+                    }`}
+                  >
+                    <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white tracking-[-0.65px]">{label}</span>
+                    {isSelected && <Check size={16} className="text-white" />}
+                  </button>
+                );
+              })}
             </div>
             <input
               type="text"
@@ -155,17 +259,24 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
                 { key: "cervicitis", label: "Cervicitis" },
                 { key: "vaginalAtrophy", label: "Vaginal Atrophy" },
                 { key: "pid", label: "Pelvic Inflammatory Disease (PID)" }
-              ].map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={conditions[key as keyof typeof conditions] as boolean}
-                    onChange={(e) => setConditions({ ...conditions, [key]: e.target.checked })}
-                    className="accent-[#a380a8] w-4 h-4"
-                  />
-                  <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white/90 tracking-[-0.65px]">{label}</span>
-                </label>
-              ))}
+              ].map(({ key, label }) => {
+                const isSelected = conditions[key as keyof typeof conditions] as boolean;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setConditions({ ...conditions, [key]: !isSelected })}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-[10px] transition-all ${
+                      isSelected
+                        ? 'bg-[#a380a8] border border-[#a380a8]'
+                        : 'bg-white/10 border border-white/20 hover:bg-white/15'
+                    }`}
+                  >
+                    <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white tracking-[-0.65px]">{label}</span>
+                    {isSelected && <Check size={16} className="text-white" />}
+                  </button>
+                );
+              })}
             </div>
             <input
               type="text"
@@ -185,17 +296,24 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
                 { key: "fragranceeFree", label: "Fragrance-Free" },
                 { key: "ecoFriendly", label: "Eco-Friendly" },
                 { key: "cruealtyFree", label: "Cruelty-Free" }
-              ].map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={preferences[key as keyof typeof preferences]}
-                    onChange={(e) => setPreferences({ ...preferences, [key]: e.target.checked })}
-                    className="accent-[#a380a8] w-4 h-4"
-                  />
-                  <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white/90 tracking-[-0.65px]">{label}</span>
-                </label>
-              ))}
+              ].map(({ key, label }) => {
+                const isSelected = preferences[key as keyof typeof preferences];
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setPreferences({ ...preferences, [key]: !isSelected })}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-[10px] transition-all ${
+                      isSelected
+                        ? 'bg-[#a380a8] border border-[#a380a8]'
+                        : 'bg-white/10 border border-white/20 hover:bg-white/15'
+                    }`}
+                  >
+                    <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white tracking-[-0.65px]">{label}</span>
+                    {isSelected && <Check size={16} className="text-white" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -204,17 +322,19 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
             <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-3">Price Range</h3>
             <div className="space-y-2">
               {["Budget-Friendly", "Mid-Range", "Premium", "No Preference"].map((range) => (
-                <label key={range} className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="priceRange"
-                    value={range}
-                    checked={priceRange === range}
-                    onChange={(e) => setPriceRange(e.target.value)}
-                    className="accent-[#a380a8] w-4 h-4"
-                  />
-                  <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white/90 tracking-[-0.65px]">{range}</span>
-                </label>
+                <button
+                  key={range}
+                  type="button"
+                  onClick={() => setPriceRange(range)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-[10px] transition-all ${
+                    priceRange === range
+                      ? 'bg-[#a380a8] border border-[#a380a8]'
+                      : 'bg-white/10 border border-white/20 hover:bg-white/15'
+                  }`}
+                >
+                  <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white tracking-[-0.65px]">{range}</span>
+                  {priceRange === range && <Check size={16} className="text-white" />}
+                </button>
               ))}
             </div>
           </div>
@@ -223,12 +343,29 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
 
       {/* Save Button */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/95 to-transparent p-6 pt-8 z-20">
+        {/* Status Message */}
+        {saveMessage && (
+          <div className={`mb-3 p-3 rounded-[10px] text-center font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] tracking-[-0.65px] ${
+            saveMessage.type === 'success' 
+              ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+              : 'bg-red-500/20 text-red-300 border border-red-500/30'
+          }`}>
+            {saveMessage.text}
+          </div>
+        )}
         <button
           onClick={handleSave}
-          className="w-full h-[50px] bg-[#a380a8] rounded-[12px] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.25)] hover:bg-[#8d6d91] transition-colors active:scale-95 flex items-center justify-center gap-2"
+          disabled={isSaving || isLoading}
+          className="w-full h-[50px] bg-[#a380a8] rounded-[12px] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.25)] hover:bg-[#8d6d91] transition-colors active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Save size={20} className="text-white" />
-          <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">Save Health Profile</p>
+          {isSaving ? (
+            <Loader2 size={20} className="text-white animate-spin" />
+          ) : (
+            <Save size={20} className="text-white" />
+          )}
+          <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">
+            {isSaving ? 'Saving...' : 'Save Health Profile'}
+          </p>
         </button>
       </div>
     </div>
