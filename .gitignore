@@ -1,0 +1,46 @@
+# Python
+venv/
+.env
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+
+# virtualenv
+.venv/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Node
+node_modules/
+
+# IDEs
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Data folders (large)
+amazon_data/
+noise_removed/
+toscrape_data/
+vibecode_data/
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/
+
+# Others
+.env.local
+.env.*.local
+
+# Composer
+vendor/
