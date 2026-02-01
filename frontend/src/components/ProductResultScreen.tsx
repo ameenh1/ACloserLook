@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import img12 from "figma:asset/3e71b2e76e3163500ce459fc35ad01faa42108fa.png";
 import img3 from "figma:asset/d4d40c58bbd603e907bcf97d939af54f73bf95c2.png";
-import { ArrowLeft, CheckCircle, AlertTriangle, XCircle, Loader2, Shield, ShieldCheck, ShieldX, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertTriangle, XCircle, Loader2, Shield, ShieldCheck, ShieldX, Sparkles, ChevronDown } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import "./ProductResultScreen.css";
 import alwaysPadImage from "../assets/61Hqf13WNcL._AC_UF1000,1000_QL80_.jpg";
 import tampaxPearlImage from "../assets/817YKHYbLPS._AC_UF1000,1000_QL80_.jpg";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./ui/collapsible";
 
 // Product images map by barcode or brand name
 const PRODUCT_IMAGES: Record<string, string> = {
@@ -319,7 +320,7 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
 
   // Success state - display product info with optional assessment overlay
   return (
-    <div className="bg-black relative w-[393px] h-[852px] overflow-hidden">
+    <div className="bg-black relative w-[393px] h-[852px] overflow-hidden overflow-x-hidden">
       {/* Top flower decoration - hide during loading */}
       {!assessmentLoading && (
         <div className="absolute flex h-[280px] items-center justify-center left-[-90px] top-[-80px] w-[350px] pointer-events-none z-0">
@@ -356,7 +357,7 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
       </div>
 
       {/* Content */}
-      <div className="absolute top-[140px] left-[24px] right-[24px] bottom-[100px] overflow-y-auto z-20">
+      <div className="absolute top-[140px] left-[24px] right-[24px] bottom-[100px] overflow-y-auto overflow-x-hidden z-20">
         {/* Product Info & Circular Score */}
         <div 
           className="rounded-[20px] p-5 mb-4"
@@ -527,27 +528,32 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
           </div>
         )}
 
-        {/* All Ingredients - Always show (from basic product data) */}
+        {/* All Ingredients - Collapsible (closed by default) */}
         {basicProduct.ingredients && basicProduct.ingredients.length > 0 && (
-          <div className="bg-[#5a3d6b]/50 border border-[#a380a8]/30 rounded-[16px] p-5 mb-4">
-            <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-3">
-              Ingredients ({basicProduct.ingredients.length})
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {basicProduct.ingredients.map((ingredient, index) => {
-                const isRisky = assessmentData?.risky_ingredients?.some(r => r.name.toLowerCase() === ingredient.toLowerCase());
-                return (
-                  <span 
-                    key={index} 
-                    className={`px-3 py-1.5 rounded-full font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] tracking-[-0.5px] ${
-                      isRisky ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-white/10 text-white"
-                    }`}
-                  >
-                    {ingredient}
-                  </span>
-                );
-              })}
-            </div>
+          <div className="bg-[#5a3d6b]/50 border border-[#a380a8]/30 rounded-[16px] mb-4 overflow-hidden">
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger className="w-full p-5 flex items-center justify-between hover:bg-[#5a3d6b]/70 transition-colors rounded-[16px]">
+                <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">
+                  Ingredients ({basicProduct.ingredients.length})
+                </h3>
+                <ChevronDown className="h-5 w-5 text-white transition-transform duration-200 data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="overflow-hidden">
+                <div className="px-5 pb-5 flex flex-col gap-3">
+                  {basicProduct.ingredients.map((ingredient, index) => {
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] tracking-[-0.5px] bg-white/10 text-white"
+                      >
+                        <span className="text-white/60">●</span>
+                        <span className="flex-1">{ingredient}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
 
