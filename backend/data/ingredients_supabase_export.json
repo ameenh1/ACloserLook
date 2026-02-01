@@ -1,6 +1,6 @@
 {
-  "supabase_count": 42,
-  "local_json_count": 42,
+  "supabase_count": 47,
+  "local_json_count": 47,
   "supabase_ingredients": [
     {
       "id": 1,
@@ -293,6 +293,41 @@
       "id": 45,
       "name": "PEG Hydrogenated Castor Oil Trilaurate",
       "description": "Plant-derived conditioning agent derived from castor oil",
+      "risk_level": "Low",
+      "has_embedding": true
+    },
+    {
+      "id": 47,
+      "name": "Cotton",
+      "description": "Natural fibers that help absorb and retain fluid, providing softness and absorbency",
+      "risk_level": "Low",
+      "has_embedding": true
+    },
+    {
+      "id": 51,
+      "name": "Glycerin",
+      "description": "Coating applied to fibers to help wick fluid efficiently for better absorption",
+      "risk_level": "Low",
+      "has_embedding": true
+    },
+    {
+      "id": 52,
+      "name": "Paraffin",
+      "description": "Wax coating that helps keep the string clean and protected from moisture",
+      "risk_level": "Low",
+      "has_embedding": true
+    },
+    {
+      "id": 53,
+      "name": "Ethoxylated Fatty Acid Esters",
+      "description": "Coating that helps fibers wick fluid more effectively for improved absorbency",
+      "risk_level": "Low",
+      "has_embedding": true
+    },
+    {
+      "id": 54,
+      "name": "PEG-100 Stearate",
+      "description": "Coating agent that helps fibers wick fluid efficiently, improving overall absorbency",
       "risk_level": "Low",
       "has_embedding": true
     }

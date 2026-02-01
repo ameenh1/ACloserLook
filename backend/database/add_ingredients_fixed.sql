@@ -12,58 +12,47 @@ SELECT setval(
 -- Step 1: Now insert ingredients - Postgres will use the correct IDs
 INSERT INTO ingredients_library (name, description, risk_level, created_at)
 VALUES
-  ('Cellulose', 'Natural plant-based fiber from wood pulp', 'Low', NOW()),
-  ('Polyethylene', 'Common plastic polymer used in product structure', 'Medium', NOW()),
-  ('Polyester', 'Synthetic fiber for absorbency and durability', 'Medium', NOW()),
-  ('Sodium Polyacrylate', 'Super-absorbent polymer for fluid retention', 'Medium', NOW()),
-  ('Hot Melt Adhesive', 'Thermoplastic adhesive for material bonding', 'Low', NOW()),
-  ('Polypropylene', 'Plastic polymer for structural support', 'Medium', NOW()),
-  ('Titanium Dioxide', 'White pigment and opacity enhancer', 'Low', NOW()),
-  ('Ethylene Vinyl Acetate Copolymer', 'Flexible polymer copolymer for comfort', 'Medium', NOW()),
-  ('Pigment Red 122', 'Synthetic red colorant', 'Medium', NOW()),
-  ('PEG-7 Glyceryl Cocoate', 'Plant-derived emulsifier and conditioning agent', 'Low', NOW()),
-  ('Pigment Blue 15', 'Synthetic blue colorant', 'Medium', NOW()),
-  ('PEG-10 Cocoate', 'Plant-derived conditioning and emollient agent', 'Low', NOW()),
-  ('Polyoxyalkylene Substituted Chromophore', 'Advanced color compound for pigmentation', 'Medium', NOW()),
-  ('PEG Sorbitol Hexaoleate', 'Plant-derived emulsifier and conditioning agent', 'Low', NOW()),
-  ('PEG Hydrogenated Castor Oil Trilaurate', 'Plant-derived conditioning agent derived from castor oil', 'Low', NOW())
+  ('Rayon', 'Fibers that help absorb and retain fluid, commonly used in tampons for absorbency', 'Low', NOW()),
+  ('Cotton', 'Natural fibers that help absorb and retain fluid, providing softness and absorbency', 'Low', NOW()),
+  ('Polypropylene', 'Synthetic fibers that help channel fluid back to the core for better absorption control', 'Medium', NOW()),
+  ('Polyethylene', 'Smooth plastic fibers that help with easy and comfortable removal', 'Medium', NOW()),
+  ('Polyester', 'Synthetic thread used to sew tampon components together for structural integrity', 'Medium', NOW()),
+  ('Glycerin', 'Coating applied to fibers to help wick fluid efficiently for better absorption', 'Low', NOW()),
+  ('Paraffin', 'Wax coating that helps keep the string clean and protected from moisture', 'Low', NOW()),
+  ('Ethoxylated Fatty Acid Esters', 'Coating that helps fibers wick fluid more effectively for improved absorbency', 'Low', NOW()),
+  ('PEG-100 Stearate', 'Coating agent that helps fibers wick fluid efficiently, improving overall absorbency', 'Low', NOW())
 ON CONFLICT (name) DO NOTHING;
 
--- Step 2: Get the IDs for all 15 ingredients - COPY THESE IDS
-SELECT id, name, risk_level 
-FROM ingredients_library 
+-- Step 2: Get the IDs for all 9 ingredients - COPY THESE IDS
+SELECT id, name, risk_level
+FROM ingredients_library
 WHERE name IN (
-  'Cellulose',
+  'Rayon',
+  'Cotton',
+  'Polypropylene',
   'Polyethylene',
   'Polyester',
-  'Sodium Polyacrylate',
-  'Hot Melt Adhesive',
-  'Polypropylene',
-  'Titanium Dioxide',
-  'Ethylene Vinyl Acetate Copolymer',
-  'Pigment Red 122',
-  'PEG-7 Glyceryl Cocoate',
-  'Pigment Blue 15',
-  'PEG-10 Cocoate',
-  'Polyoxyalkylene Substituted Chromophore',
-  'PEG Sorbitol Hexaoleate',
-  'PEG Hydrogenated Castor Oil Trilaurate'
+  'Glycerin',
+  'Paraffin',
+  'Ethoxylated Fatty Acid Esters',
+  'PEG-100 Stearate'
 )
 ORDER BY name;
 
 -- ==========================================
--- Step 3: AFTER getting IDs from above, fill in and run this:
+-- Step 3: INSERT YOUR PRODUCT with the ingredient IDs
+-- Note: Status must be 'pending', 'review_needed', or 'ready' (NOT 'active')
 -- ==========================================
 
--- INSERT INTO products (brand_name, barcode, product_type, ingredients, coverage_score, research_count, status, created_at, updated_at)
--- VALUES (
---   'YOUR_BRAND_NAME',                    
---   'YOUR_BARCODE_HERE',                  
---   'pad',                                
---   ARRAY[id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12, id13, id14, id15],  
---   0.85,                                 
---   15,                                   
---   'active',
---   NOW(),
---   NOW()
--- );
+INSERT INTO products (brand_name, barcode, product_type, ingredients, coverage_score, research_count, status, created_at, updated_at)
+VALUES (
+  'YOUR_BRAND_NAME',
+  'YOUR_BARCODE_HERE',
+  'tampon',
+  ARRAY[47, 53, 51, 52, 54, 3, 32, 36, 2],  -- Cotton, Ethoxylated Fatty Acid Esters, Glycerin, Paraffin, PEG-100 Stearate, Polyester, Polyethylene, Polypropylene, Rayon
+  0.85,
+  9,
+  'ready',
+  NOW(),
+  NOW()
+);
