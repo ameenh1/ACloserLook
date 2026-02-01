@@ -43,9 +43,9 @@ class Settings(BaseSettings):
     DEBUG: bool = Field(default=False, description="Debug mode flag")
     
     # CORS Configuration
-    CORS_ORIGINS: List[str] = Field(
+    CORS_ORIGINS: str | List[str] = Field(
         default=["http://localhost:3000", "http://localhost:8000"],
-        description="Allowed CORS origins"
+        description="Allowed CORS origins (comma-separated string or list)"
     )
     
     # OpenAI Configuration (Required for vector search)
@@ -94,6 +94,19 @@ class Settings(BaseSettings):
         if v not in valid_levels:
             raise ValueError(f"LOG_LEVEL must be one of: {', '.join(valid_levels)}. Got: {v}")
         return v
+    
+    @field_validator('CORS_ORIGINS')
+    @classmethod
+    def validate_cors_origins(cls, v):
+        """Parse CORS_ORIGINS from comma-separated string or list"""
+        if isinstance(v, str):
+            # Split comma-separated string into list
+            origins = [origin.strip() for origin in v.split(',') if origin.strip()]
+            return origins
+        elif isinstance(v, list):
+            return v
+        else:
+            raise ValueError(f"CORS_ORIGINS must be a string or list, got {type(v)}")
     
     @field_validator('DATABASE_POOL_SIZE')
     @classmethod

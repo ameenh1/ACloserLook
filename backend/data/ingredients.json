@@ -251,6 +251,48 @@
       "name": "PEG Hydrogenated Castor Oil Trilaurate",
       "description": "Plant-derived conditioning agent derived from castor oil",
       "risk_level": "Low"
+    },
+    {
+      "id": 47,
+      "name": "Cotton",
+      "description": "Natural fibers that help absorb and retain fluid, providing softness and absorbency",
+      "risk_level": "Low"
+    },
+    {
+      "id": 51,
+      "name": "Glycerin",
+      "description": "Coating applied to fibers to help wick fluid efficiently for better absorption",
+      "risk_level": "Low"
+    },
+    {
+      "id": 52,
+      "name": "Paraffin",
+      "description": "Wax coating that helps keep the string clean and protected from moisture",
+      "risk_level": "Low"
+    },
+    {
+      "id": 53,
+      "name": "Ethoxylated Fatty Acid Esters",
+      "description": "Coating that helps fibers wick fluid more effectively for improved absorbency",
+      "risk_level": "Low"
+    },
+    {
+      "id": 54,
+      "name": "PEG-100 Stearate",
+      "description": "Coating agent that helps fibers wick fluid efficiently, improving overall absorbency",
+      "risk_level": "Low"
+    },
+    {
+      "id": 55,
+      "name": "Boric Acid (NF Grade)",
+      "description": "Pharmaceutical grade boric acid used for vaginal pH balance and yeast infection treatment",
+      "risk_level": "Medium"
+    },
+    {
+      "id": 56,
+      "name": "Gelatin Capsule",
+      "description": "Natural gelatin capsule shell used to contain and deliver active ingredients",
+      "risk_level": "Low"
     }
   ]
 }
