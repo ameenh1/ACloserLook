@@ -12,30 +12,29 @@ SELECT setval(
 -- Step 1: Now insert ingredients - Postgres will use the correct IDs
 INSERT INTO ingredients_library (name, description, risk_level, created_at)
 VALUES
-  ('Rayon', 'Fibers that help absorb and retain fluid, commonly used in tampons for absorbency', 'Low', NOW()),
-  ('Cotton', 'Natural fibers that help absorb and retain fluid, providing softness and absorbency', 'Low', NOW()),
-  ('Polypropylene', 'Synthetic fibers that help channel fluid back to the core for better absorption control', 'Medium', NOW()),
-  ('Polyethylene', 'Smooth plastic fibers that help with easy and comfortable removal', 'Medium', NOW()),
-  ('Polyester', 'Synthetic thread used to sew tampon components together for structural integrity', 'Medium', NOW()),
-  ('Glycerin', 'Coating applied to fibers to help wick fluid efficiently for better absorption', 'Low', NOW()),
-  ('Paraffin', 'Wax coating that helps keep the string clean and protected from moisture', 'Low', NOW()),
-  ('Ethoxylated Fatty Acid Esters', 'Coating that helps fibers wick fluid more effectively for improved absorbency', 'Low', NOW()),
-  ('PEG-100 Stearate', 'Coating agent that helps fibers wick fluid efficiently, improving overall absorbency', 'Low', NOW())
+  -- URO Vaginal Probiotic ingredients
+  ('Lactobacillus acidophilus', 'Beneficial probiotic bacteria that supports vaginal health by maintaining healthy pH balance', 'Low', NOW()),
+  ('Lactobacillus rhamnosus', 'Probiotic strain that helps maintain vaginal microbiome balance and supports immune function', 'Low', NOW()),
+  ('Lactobacillus reuteri', 'Probiotic bacteria that promotes vaginal health and helps prevent harmful bacterial growth', 'Low', NOW()),
+  ('Lactobacillus fermentum', 'Probiotic strain that supports vaginal flora balance and produces antimicrobial compounds', 'Low', NOW()),
+  ('Xylooligosaccharides', 'Prebiotic fiber (XOS) that feeds beneficial bacteria and supports gut and vaginal health', 'Low', NOW()),
+  ('Maltodextrin', 'Carbohydrate filler used as a carrier for probiotic cultures in supplements', 'Low', NOW()),
+  ('Cellulose', 'Plant-based fiber used to create vegetarian capsule shells', 'Low', NOW()),
+  ('Natural Color', 'Plant-derived coloring agents used for aesthetic purposes in supplements', 'Low', NOW())
 ON CONFLICT (name) DO NOTHING;
 
--- Step 2: Get the IDs for all 9 ingredients - COPY THESE IDS
+-- Step 2: Get the IDs for all ingredients - COPY THESE IDS
 SELECT id, name, risk_level
 FROM ingredients_library
 WHERE name IN (
-  'Rayon',
-  'Cotton',
-  'Polypropylene',
-  'Polyethylene',
-  'Polyester',
-  'Glycerin',
-  'Paraffin',
-  'Ethoxylated Fatty Acid Esters',
-  'PEG-100 Stearate'
+  'Lactobacillus acidophilus',
+  'Lactobacillus rhamnosus',
+  'Lactobacillus reuteri',
+  'Lactobacillus fermentum',
+  'Xylooligosaccharides',
+  'Maltodextrin',
+  'Cellulose',
+  'Natural Color'
 )
 ORDER BY name;
 
@@ -46,12 +45,12 @@ ORDER BY name;
 
 INSERT INTO products (brand_name, barcode, product_type, ingredients, coverage_score, research_count, status, created_at, updated_at)
 VALUES (
-  'Tampax Pearl',
-  '073010719743',
-  'tampon',
-  ARRAY[47, 53, 51, 52, 54, 3, 32, 36, 2],  -- Cotton, Ethoxylated Fatty Acid Esters, Glycerin, Paraffin, PEG-100 Stearate, Polyester, Polyethylene, Polypropylene, Rayon
-  0.85,
-  9,
+  'URO Vaginal Probiotic',
+  '860008361769',
+  'supplement',
+  ARRAY[31, 57, 60, 59, 58, 62, 64, 61],  -- Cellulose, Lactobacillus acidophilus, Lactobacillus fermentum, Lactobacillus reuteri, Lactobacillus rhamnosus, Maltodextrin, Natural Color, Xylooligosaccharides
+  1.0,
+  8,
   'ready',
   NOW(),
   NOW()

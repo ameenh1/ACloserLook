@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import "./ProductResultScreen.css";
 import alwaysPadImage from "../assets/61Hqf13WNcL._AC_UF1000,1000_QL80_.jpg";
 import tampaxPearlImage from "../assets/817YKHYbLPS._AC_UF1000,1000_QL80_.jpg";
+import uroImage from "../assets/URO_IMG.jpg";
 
 // Product images map by barcode or brand name
 const PRODUCT_IMAGES: Record<string, string> = {
@@ -13,6 +14,7 @@ const PRODUCT_IMAGES: Record<string, string> = {
   'always': alwaysPadImage,
   '073010719743': tampaxPearlImage,
   'tampax': tampaxPearlImage,
+  '860008361769': uroImage,
 };
 
 interface RiskyIngredient {
