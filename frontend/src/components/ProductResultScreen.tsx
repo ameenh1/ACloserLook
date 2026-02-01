@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import img12 from "figma:asset/3e71b2e76e3163500ce459fc35ad01faa42108fa.png";
 import img3 from "figma:asset/d4d40c58bbd603e907bcf97d939af54f73bf95c2.png";
 import { ArrowLeft, CheckCircle, AlertTriangle, XCircle, Loader2, Shield, ShieldCheck, ShieldX, Sparkles, ChevronDown } from "lucide-react";
@@ -7,6 +8,10 @@ import "./ProductResultScreen.css";
 import alwaysPadImage from "../assets/61Hqf13WNcL._AC_UF1000,1000_QL80_.jpg";
 import tampaxPearlImage from "../assets/817YKHYbLPS._AC_UF1000,1000_QL80_.jpg";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./ui/collapsible";
+import { GlassCard } from "./ui/GlassCard";
+import { AnimatedScoreRing } from "./ui/AnimatedScoreRing";
+import { FloatingProductImage } from "./ui/FloatingProductImage";
+import { HealthWarningPill } from "./ui/HealthWarningPill";
 
 // Product images map by barcode or brand name
 const PRODUCT_IMAGES: Record<string, string> = {
@@ -359,125 +364,61 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
       {/* Content */}
       <div className="absolute top-[140px] left-[24px] right-[24px] bottom-[100px] overflow-y-auto overflow-x-hidden z-20">
         {/* Product Info & Circular Score */}
-        <div 
-          className="rounded-[20px] p-5 mb-4"
-          style={{ 
-            backgroundColor: 'rgba(30, 30, 30, 0.9)', 
-            border: '1px solid rgba(80, 80, 80, 0.5)' 
-          }}
-        >
-          {/* Side by side layout: Info on left, Image on right */}
-          <div className="flex items-center justify-between px-4">
-            {/* Left side: Product name, score, caution */}
-            <div className="flex flex-col items-center">
-              {/* Product Name */}
-              <h2 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.8px] mb-3">
-                {basicProduct.brand_name}{basicProduct.product_type ? ` ${basicProduct.product_type}` : ''}
-              </h2>
+        <GlassCard className="mb-6 relative overflow-visible">
+          {/* Floating Product Image - overlapping top-right */}
+          {(PRODUCT_IMAGES[barcode] || PRODUCT_IMAGES[basicProduct.brand_name.toLowerCase()]) && (
+            <FloatingProductImage
+              src={PRODUCT_IMAGES[barcode] || PRODUCT_IMAGES[basicProduct.brand_name.toLowerCase()]}
+              alt={basicProduct.brand_name}
+              size={85}
+            />
+          )}
 
-              {/* Circular Score Ring */}
-              <div className="flex flex-col items-center mb-2">
-                {assessmentLoading ? (
-                  <div className="skeleton skeleton-box" style={{ width: "60px", height: "60px", borderRadius: "50%" }}></div>
-                ) : (
-                  <div className="relative w-[60px] h-[60px]">
-                    {/* SVG Circular Progress */}
-                    <svg className="w-full h-full -rotate-90" viewBox="0 0 60 60">
-                      {/* Background circle */}
-                      <circle
-                        cx="30"
-                        cy="30"
-                        r="25"
-                        fill="none"
-                        stroke="rgba(80, 80, 80, 0.5)"
-                        strokeWidth="5"
-                      />
-                      {/* Progress circle */}
-                      <circle
-                        cx="30"
-                        cy="30"
-                        r="25"
-                        fill="none"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                        style={{
-                          stroke: safetyDisplay.score >= 71 ? '#4ade80' : safetyDisplay.score >= 41 ? '#facc15' : '#f87171',
-                          strokeDasharray: '157.08',
-                          strokeDashoffset: 157.08 - (157.08 * safetyDisplay.score) / 100,
-                        }}
-                      />
-                    </svg>
-                    {/* Score Number in Center */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span 
-                        className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] font-bold"
-                        style={{ 
-                          color: safetyDisplay.score >= 71 ? '#4ade80' : safetyDisplay.score >= 41 ? '#facc15' : '#f87171' 
-                        }}
-                      >
-                        {safetyDisplay.score}/100
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
+          <div className="flex flex-col items-center pt-2">
+            {/* Product Name */}
+            <h2 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.8px] mb-4">
+              {basicProduct.brand_name}{basicProduct.product_type ? ` ${basicProduct.product_type}` : ''}
+            </h2>
 
-              {/* Caution/Safe Label with Shield */}
-              <div className="flex items-center gap-2">
-                <SafetyIcon 
-                  size={16} 
-                  style={{ 
-                    color: safetyDisplay.score >= 71 ? '#4ade80' : safetyDisplay.score >= 41 ? '#facc15' : '#f87171' 
-                  }} 
-                />
-                <span 
-                  className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] font-semibold"
-                  style={{ 
-                    color: safetyDisplay.score >= 71 ? '#4ade80' : safetyDisplay.score >= 41 ? '#facc15' : '#f87171' 
-                  }}
-                >
-                  {safetyDisplay.label}
-                </span>
-              </div>
+            {/* Animated Circular Score Ring */}
+            <div className="flex flex-col items-center mb-3">
+              {assessmentLoading ? (
+                <div className="skeleton skeleton-box" style={{ width: "60px", height: "60px", borderRadius: "50%" }}></div>
+              ) : (
+                <AnimatedScoreRing score={safetyDisplay.score} size={60} />
+              )}
             </div>
 
-            {/* Right side: Product Image */}
-            {(PRODUCT_IMAGES[barcode] || PRODUCT_IMAGES[basicProduct.brand_name.toLowerCase()]) && (
-              <div className="flex-shrink-0">
-                <img 
-                  src={PRODUCT_IMAGES[barcode] || PRODUCT_IMAGES[basicProduct.brand_name.toLowerCase()]} 
-                  alt={basicProduct.brand_name}
-                  style={{ width: '85px', height: '85px', objectFit: 'contain', borderRadius: '10px' }}
-                />
-              </div>
-            )}
+            {/* Caution/Safe Label with Shield */}
+            <div className="flex items-center gap-2">
+              <SafetyIcon
+                size={16}
+                style={{
+                  color: safetyDisplay.score >= 71 ? '#4ade80' : safetyDisplay.score >= 41 ? '#facc15' : '#f87171'
+                }}
+              />
+              <span
+                className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] font-semibold"
+                style={{
+                  color: safetyDisplay.score >= 71 ? '#4ade80' : safetyDisplay.score >= 41 ? '#facc15' : '#f87171'
+                }}
+              >
+                {safetyDisplay.label}
+              </span>
+            </div>
           </div>
-        </div>
+        </GlassCard>
 
         {/* AI Analysis - Only show when assessment is loaded */}
         {assessmentLoading ? (
-          <div 
-            className="p-5 mb-4"
-            style={{ 
-              backgroundColor: 'rgba(30, 30, 30, 0.9)', 
-              border: '1px solid rgba(80, 80, 80, 0.5)',
-              borderRadius: '20px'
-            }}
-          >
+          <GlassCard className="mb-6" animated={false}>
             <div className="skeleton skeleton-text large" style={{ width: "40%", marginBottom: "1rem" }}></div>
             <div className="skeleton skeleton-text" style={{ width: "100%" }}></div>
             <div className="skeleton skeleton-text" style={{ width: "95%" }}></div>
             <div className="skeleton skeleton-text" style={{ width: "90%" }}></div>
-          </div>
+          </GlassCard>
         ) : assessmentData ? (
-          <div 
-            className="p-5 mb-4"
-            style={{ 
-              backgroundColor: 'rgba(30, 30, 30, 0.9)', 
-              border: '1px solid rgba(80, 80, 80, 0.5)',
-              borderRadius: '20px'
-            }}
-          >
+          <GlassCard className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles size={20} className="text-white" />
               <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">
@@ -486,21 +427,27 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
             </div>
             <div className="space-y-3">
               {assessmentData.explanation.split('. ').filter(s => s.trim()).map((sentence, index) => (
-                <div key={index} className="flex items-start gap-3">
+                <motion.div
+                  key={index}
+                  className="flex items-start gap-3"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.3 }}
+                >
                   <span className="text-white mt-1.5 text-lg">•</span>
                   <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white/90 tracking-[-0.65px] leading-relaxed">
                     {sentence.trim().replace(/\.$/, '')}
                   </span>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </GlassCard>
         ) : null}
 
         {/* Risky Ingredients (if any) - Only show when assessment is loaded */}
         {assessmentData && assessmentData.risky_ingredients && assessmentData.risky_ingredients.length > 0 && (
-          <div className="bg-red-500/20 border border-red-500/40 rounded-[16px] p-5 mb-4">
-            <div className="flex items-center gap-2 mb-3">
+          <GlassCard className="bg-red-500/10 border-red-500/40 mb-6">
+            <div className="flex items-center gap-2 mb-4">
               <AlertTriangle size={20} className="text-red-400" />
               <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">
                 Health Warnings
@@ -508,58 +455,50 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
             </div>
             <div className="space-y-3">
               {assessmentData.risky_ingredients.map((ingredient, index) => (
-                <div key={index} className="bg-[#3a2849]/60 rounded-[10px] p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white tracking-[-0.65px]">
-                      {ingredient.name}
-                    </p>
-                    <span className={`font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[10px] px-2 py-0.5 rounded-full ${
-                      ingredient.risk_level === "High Risk" ? "bg-red-500/30 text-red-400" : "bg-yellow-500/30 text-yellow-400"
-                    }`}>
-                      {ingredient.risk_level}
-                    </span>
-                  </div>
-                  <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] text-white tracking-[-0.5px]">
-                    {ingredient.reason}
-                  </p>
-                </div>
+                <HealthWarningPill
+                  key={index}
+                  name={ingredient.name}
+                  reason={ingredient.reason}
+                  severity={ingredient.risk_level as "High Risk" | "Caution"}
+                />
               ))}
             </div>
-          </div>
+          </GlassCard>
         )}
 
         {/* All Ingredients - Collapsible (closed by default) */}
         {basicProduct.ingredients && basicProduct.ingredients.length > 0 && (
-          <div className="bg-[#5a3d6b]/50 border border-[#a380a8]/30 rounded-[16px] mb-4 overflow-hidden">
+          <GlassCard className="mb-6 overflow-hidden p-0" animated={false}>
             <Collapsible defaultOpen={false}>
-              <CollapsibleTrigger className="w-full p-5 flex items-center justify-between hover:bg-[#5a3d6b]/70 transition-colors rounded-[16px]">
+              <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-white/5 transition-colors">
                 <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">
                   Ingredients ({basicProduct.ingredients.length})
                 </h3>
                 <ChevronDown className="h-5 w-5 text-white transition-transform duration-200 data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="overflow-hidden">
-                <div className="px-5 pb-5 flex flex-col gap-3">
-                  {basicProduct.ingredients.map((ingredient, index) => {
-                    return (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] tracking-[-0.5px] bg-white/10 text-white"
-                      >
-                        <span className="text-white/60">●</span>
-                        <span className="flex-1">{ingredient}</span>
-                      </div>
-                    );
-                  })}
+                <div className="px-6 pb-6 flex flex-col gap-3">
+                  {basicProduct.ingredients.map((ingredient, index) => (
+                    <motion.div
+                      key={index}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] tracking-[-0.5px] bg-white/10 text-white border border-white/10"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.02, duration: 0.2 }}
+                    >
+                      <span className="text-white/60">●</span>
+                      <span className="flex-1">{ingredient}</span>
+                    </motion.div>
+                  ))}
                 </div>
               </CollapsibleContent>
             </Collapsible>
-          </div>
+          </GlassCard>
         )}
 
         {/* Alternative Products (only if assessment available and not safe) */}
         {assessmentData && !isSafe && alternatives.length > 0 && (
-          <div className="bg-[#5a3d6b]/50 border border-[#a380a8]/40 rounded-[16px] p-5 mb-4">
+          <GlassCard className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck size={20} className="text-[#a380a8]" />
               <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">
@@ -567,7 +506,7 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
               </h3>
             </div>
             <div className="space-y-3">
-              {alternatives.map((alt) => {
+              {alternatives.map((alt, index) => {
                 // Hardcoded URLs for specific alternatives
                 const productUrls: Record<string, string> = {
                   "Rael Organic Cotton Cover Pads": "https://www.getrael.com/collections/pads/products/petite-organic-cotton-pads?variant=51779702718829",
@@ -577,14 +516,19 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
                 const url = alt.url || productUrls[alt.brand_name];
                 
                 return (
-                  <div 
-                    key={alt.id} 
+                  <motion.div
+                    key={alt.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.3 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       if (url) {
                         window.open(url, '_blank', 'noopener,noreferrer');
                       }
                     }}
-                    className={`bg-[#3a2849]/60 border border-[#a380a8]/20 rounded-[12px] p-4 ${url ? 'hover:bg-[#4a3859]/60 hover:border-[#a380a8]/40 transition-all cursor-pointer' : ''}`}
+                    className={`backdrop-blur-md bg-white/5 border border-white/20 rounded-[12px] p-4 ${url ? 'hover:bg-white/10 hover:border-white/30 transition-all cursor-pointer' : ''}`}
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -602,16 +546,16 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
+          </GlassCard>
         )}
 
         {/* Safe product encouragement */}
         {assessmentData && isSafe && (
-          <div className="bg-green-500/20 border border-green-500/40 rounded-[16px] p-5 mb-4">
+          <GlassCard className="bg-green-500/10 border-green-500/40 mb-6">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle size={20} className="text-green-400" />
               <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-green-400 tracking-[-0.7px]">
@@ -621,30 +565,32 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
             <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white tracking-[-0.6px]">
               This product aligns well with your health profile and contains safe, quality ingredients.
             </p>
-          </div>
+          </GlassCard>
         )}
 
         {/* Research Info */}
         {basicProduct.research_count !== undefined && basicProduct.research_count > 0 && (
-          <div className="bg-[#5a3d6b]/50 border border-[#a380a8]/30 rounded-[16px] p-5 mb-4">
+          <GlassCard className="mb-6">
             <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-2">
               Research-Backed
             </h3>
             <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white tracking-[-0.6px]">
               This product has {basicProduct.research_count} research studies referencing its ingredients.
             </p>
-          </div>
+          </GlassCard>
         )}
       </div>
 
       {/* Bottom Action */}
       <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-6 z-30">
-        <button
+        <motion.button
           onClick={onScanAnother}
-          className="w-full h-[50px] bg-[#a380a8] rounded-[12px] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.25)] hover:bg-[#8d6d91] transition-colors active:scale-95"
+          className="w-full h-[50px] bg-gradient-to-r from-purple-600 to-pink-500 rounded-[12px] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.25)] transition-all"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">Scan Another Product</p>
-        </button>
+        </motion.button>
       </div>
     </div>
   );
