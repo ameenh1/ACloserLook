@@ -1,0 +1,80 @@
+@keyframes skeleton-loading {
+  0% {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.skeleton {
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 0.5rem;
+}
+
+.skeleton-text {
+  height: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-text.large {
+  height: 1.5rem;
+}
+
+.skeleton-box {
+  height: 4rem;
+  width: 100%;
+}
+
+/* Circular Progress Ring Animation */
+@keyframes circular-progress {
+  from {
+    stroke-dashoffset: 213.6;
+  }
+}
+
+.circular-progress-ring {
+  transition: stroke-dashoffset 1s ease-out, stroke 0.3s ease;
+  animation: circular-progress 1s ease-out;
+}
+
+/* Pulse animation for high-risk scores */
+@keyframes pulse-danger {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
+.risk-score-high {
+  animation: pulse-danger 2s ease-in-out infinite;
+}
+
+/* Circular score container with smooth transitions */
+.circular-score-container {
+  transition: all 0.3s ease;
+}
+
+/* Ensure smooth rendering for SVG */
+.circular-progress-ring {
+  will-change: stroke-dashoffset;
+}
+
+/* Accessibility: Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .circular-progress-ring {
+    animation: none;
+    transition: none;
+  }
+  
+  .risk-score-high {
+    animation: none;
+  }
+}

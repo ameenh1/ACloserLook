@@ -1,0 +1,22 @@
+@keyframes fallFlower {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 0.8;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  75% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(900px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.falling-flower {
+  position: absolute;
+  animation: fallFlower linear infinite;
+  will-change: transform;
+}

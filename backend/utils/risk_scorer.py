@@ -444,6 +444,31 @@ def _extract_risky_ingredients(
     return risky_items
 
 
+def _calculate_risk_score(risky_ingredients: List[Dict[str, str]]) -> int:
+    """
+    Calculate numeric risk score (0-100) based on risky ingredients
+    FALLBACK ONLY - LLM should provide score in response
+    
+    Args:
+        risky_ingredients: List of risky ingredients with risk_level
+        
+    Returns:
+        Score from 0 (most risky) to 100 (safest)
+    """
+    base_score = 100
+    
+    for ingredient in risky_ingredients:
+        risk_level = ingredient.get('risk_level', '').lower()
+        
+        if 'high' in risk_level:
+            base_score -= 8
+        elif 'medium' in risk_level or 'caution' in risk_level:
+            base_score -= 4
+    
+    # Ensure score stays within bounds
+    return max(0, min(100, base_score))
+
+
 async def generate_risk_score_for_product(
     product_id: int,
     product_name: str,
@@ -464,6 +489,7 @@ async def generate_risk_score_for_product(
     Returns:
         Dict containing:
         - risk_level: "Low Risk | Caution | High Risk"
+        - risk_score: Numeric score 0-100 (100 = safest)
         - explanation: 2-sentence assessment
         - risky_ingredients: List of dicts with name, risk_level, reason
         
@@ -493,11 +519,26 @@ async def generate_risk_score_for_product(
         
         logger.info(f"Risk assessment completed. Level: {risk_assessment.get('overall_risk_level')}")
         
-        # Step 4: Format response
+        # Step 4: Extract risky ingredients
+        risky_ingredients = _extract_risky_ingredients(risk_assessment.get("ingredient_details", []))
+        
+        # Step 5: Get risk score from LLM response, or calculate as fallback
+        risk_score = risk_assessment.get("risk_score")
+        if risk_score is None:
+            logger.warning("LLM did not provide risk_score, calculating fallback score")
+            risk_score = _calculate_risk_score(risky_ingredients)
+        else:
+            # Validate score is within bounds
+            risk_score = max(0, min(100, int(risk_score)))
+        
+        logger.info(f"Final risk score: {risk_score}")
+        
+        # Step 6: Format response
         response = {
             "risk_level": _normalize_risk_level(risk_assessment.get("overall_risk_level", "Caution")),
+            "risk_score": risk_score,
             "explanation": risk_assessment.get("explanation", "Unable to generate assessment"),
-            "risky_ingredients": _extract_risky_ingredients(risk_assessment.get("ingredient_details", []))
+            "risky_ingredients": risky_ingredients
         }
         
         return response

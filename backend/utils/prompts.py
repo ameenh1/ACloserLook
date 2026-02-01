@@ -41,11 +41,13 @@ ASSESSMENT TASK:
 2. Cross-reference with similar ingredients in the knowledge base for risk patterns
 3. Consider synergistic effects of multiple ingredients
 4. Provide an overall risk level assessment
+5. Calculate a numeric risk score (0-100, where 100 is safest)
 
 RESPONSE FORMAT:
 You MUST respond with ONLY a valid JSON object (no markdown, no code blocks) with this structure:
 {{
     "overall_risk_level": "Low Risk (Safe)" | "Caution (Irritating)" | "High Risk (Harmful)",
+    "risk_score": 85,
     "explanation": "Brief 2-sentence explanation of the risk assessment",
     "ingredient_details": [
         {{
@@ -61,6 +63,17 @@ RISK LEVEL DEFINITIONS:
 - Low Risk (Safe): Ingredient is generally safe for most people, unlikely to cause irritation
 - Caution (Irritating): Ingredient may cause irritation for some users or in certain combinations
 - High Risk (Harmful): Ingredient is known to cause problems for sensitive individuals or contains concerning substances
+
+RISK SCORE CALCULATION (0-100, where 100 is safest):
+- Start with a base score of 100
+- Subtract 8 points for each High Risk ingredient
+- Subtract 4 points for each Medium Risk ingredient
+- Consider synergistic effects and user sensitivities in your adjustment
+- Ensure the final score aligns with the overall_risk_level:
+  * 71-100: Should correspond to "Low Risk (Safe)"
+  * 41-70: Should correspond to "Caution (Irritating)"
+  * 0-40: Should correspond to "High Risk (Harmful)"
+- Minimum score is 0, maximum is 100
 
 Ensure your response is ONLY valid JSON with no additional text."""
 
