@@ -185,6 +185,16 @@ app.include_router(profiles.router, prefix="/api")
 app.include_router(ingredients.router, prefix="/api")
 
 
+# Global OPTIONS handler for CORS preflight
+@app.options("/{full_path:path}", include_in_schema=False)
+async def options_handler(full_path: str):
+    """
+    Handle OPTIONS preflight requests for CORS
+    Returns 200 OK with appropriate CORS headers (set by CORSMiddleware)
+    """
+    return {"status": "ok"}
+
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     """
