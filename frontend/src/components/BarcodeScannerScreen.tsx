@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Camera } from "lucide-react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 interface BarcodeScannerScreenProps {
   onBack: () => void;
@@ -22,14 +22,25 @@ export default function BarcodeScannerScreen({ onBack, onScanSuccess }: BarcodeS
 
   const startScanner = async () => {
     try {
-      const scanner = new Html5Qrcode("reader");
+      const scanner = new Html5Qrcode("reader", {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.UPC_A,      // Standard US barcodes
+          Html5QrcodeSupportedFormats.UPC_E,      // Short US barcodes
+          Html5QrcodeSupportedFormats.EAN_13,     // International barcodes
+          Html5QrcodeSupportedFormats.EAN_8,      // Short international
+          Html5QrcodeSupportedFormats.CODE_128,   // Shipping/logistics
+          Html5QrcodeSupportedFormats.CODE_39,    // Alternate format
+          Html5QrcodeSupportedFormats.QR_CODE     // QR codes (optional)
+        ],
+        verbose: false
+      });
       scannerRef.current = scanner;
 
       await scanner.start(
         { facingMode: "environment" },
         {
-          fps: 10,
-          qrbox: { width: 250, height: 150 },
+          fps: 15,
+          qrbox: { width: 300, height: 200 }
         },
         (decodedText) => {
           // Success callback

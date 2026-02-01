@@ -1,9 +1,10 @@
 import img2 from "figma:asset/d571e3dce4defe6c21b77ea653882f35e55dba90.png";
 import img10 from "figma:asset/8331fbee660e6ce05a6f827bee5684e2c298681b.png";
 import { Scan, User, LogOut } from "lucide-react";
+import RecentScansDropdown from "./RecentScansDropdown";
 
 interface HomePageScreenProps {
-  onScanProduct: () => void;
+  onScanProduct: (barcode?: string) => void;
   onLogout: () => void;
   onProfile: () => void;
 }
@@ -32,11 +33,7 @@ export default function HomePageScreen({ onScanProduct, onLogout, onProfile }: H
       </div>
 
       {/* Header */}
-      <div className="absolute top-[60px] left-[24px] right-[24px] flex items-center justify-between z-10">
-        <div>
-          <h1 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] font-bold text-[28px] text-white tracking-[-1.5px]">A Closer Look</h1>
-          <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white/70 tracking-[-0.6px] mt-1">Welcome back!</p>
-        </div>
+      <div className="absolute top-[60px] left-[24px] right-[24px] flex items-center justify-end z-10">
         <button
           onClick={onLogout}
           className="text-white hover:text-[#a380a8] transition-colors"
@@ -56,7 +53,7 @@ export default function HomePageScreen({ onScanProduct, onLogout, onProfile }: H
 
         {/* Scan Button */}
         <button
-          onClick={onScanProduct}
+          onClick={() => onScanProduct()}
           className="w-full h-[140px] bg-gradient-to-br from-[#a380a8] to-[#8d6d91] rounded-[20px] shadow-[0px_8px_16px_0px_rgba(163,128,168,0.3)] hover:shadow-[0px_12px_24px_0px_rgba(163,128,168,0.4)] transition-all active:scale-95 flex flex-col items-center justify-center gap-3"
         >
           <div className="bg-white/20 rounded-full p-4">
@@ -67,10 +64,7 @@ export default function HomePageScreen({ onScanProduct, onLogout, onProfile }: H
 
         {/* Info Cards */}
         <div className="mt-8 space-y-3">
-          <div className="bg-white/5 border border-white/10 rounded-[12px] p-4">
-            <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white tracking-[-0.65px] mb-2">Recent Scans</h3>
-            <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white/60 tracking-[-0.6px]">No products scanned yet</p>
-          </div>
+          <RecentScansDropdown onScanClick={(barcode) => onScanProduct(barcode)} />
 
           <div className="bg-white/5 border border-white/10 rounded-[12px] p-4">
             <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white tracking-[-0.65px] mb-2">Safety Tips</h3>

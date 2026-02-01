@@ -12,11 +12,119 @@ from fastapi.responses import JSONResponse
 from models.schemas import BarcodeLookupRequest, BarcodeLookupResponse, BarcodeProduct
 from utils.barcode_lookup import lookup_product_by_barcode, BarcodeLookupError
 from utils.risk_scorer import generate_risk_score_for_product, RiskScorerError
+from utils.supabase_client import get_supabase_client
 
 logger = logging.getLogger(__name__)
 
 # Create router with /api prefix (will be included in main.py)
 router = APIRouter()
+
+
+async def get_safer_alternatives(product_type: str, exclude_product_id: int, limit: int = 3) -> list:
+    """
+    Fetch safer organic/non-toxic alternatives for a given product type
+    
+    Args:
+        product_type: Type of product (e.g., 'pad', 'tampon')
+        exclude_product_id: ID of the scanned product to exclude from results
+        limit: Maximum number of alternatives to return
+        
+    Returns:
+        List of safer alternative products
+    """
+    try:
+        supabase = get_supabase_client()
+        
+        # Define organic/safe brand prefixes for each product type
+        organic_brands = {
+            "pad": ["Rael", "Cora", "Organyc"],
+            "tampon": ["Organyc", "Cora", "Honey Pot"]
+        }
+        
+        brands_to_search = organic_brands.get(product_type, [])
+        alternatives = []
+        
+        # Query for each organic brand
+        for brand in brands_to_search:
+            if len(alternatives) >= limit:
+                break
+                
+            result = supabase.table("products") \
+                .select("id, brand_name, product_type, barcode, coverage_score") \
+                .eq("product_type", product_type) \
+                .neq("id", exclude_product_id) \
+                .ilike("brand_name", f"%{brand}%") \
+                .eq("status", "ready") \
+                .limit(1) \
+                .execute()
+            
+            if result.data:
+                product = result.data[0]
+                alternatives.append({
+                    "id": product["id"],
+                    "brand_name": product["brand_name"],
+                    "product_type": product["product_type"],
+                    "safety_label": "Safe"
+                })
+        
+        logger.info(f"Found {len(alternatives)} safer alternatives for {product_type}")
+        return alternatives
+        
+    except Exception as e:
+        logger.error(f"Error fetching safer alternatives: {e}", exc_info=True)
+        return []
+
+
+async def save_scan_to_history(
+    scan_id: str,
+    user_id: str,
+    product: BarcodeProduct,
+    risk_level: str,
+    risk_score: Optional[int],
+    risky_ingredients: list,
+    explanation: str
+) -> bool:
+    """
+    Save scan to scan_history table in Supabase
+    
+    Args:
+        scan_id: Unique UUID for this scan
+        user_id: User ID who performed the scan
+        product: Product object with details
+        risk_level: Overall risk level (Low Risk, Caution, High Risk)
+        risk_score: Numeric score 0-100 (optional)
+        risky_ingredients: List of risky ingredient objects
+        explanation: LLM-generated explanation
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        supabase = get_supabase_client()
+        
+        data = {
+            "scan_id": scan_id,
+            "user_id": user_id,
+            "product_id": product.id,
+            "barcode": product.barcode,
+            "risk_level": risk_level,
+            "risk_score": risk_score,
+            "risky_ingredients": risky_ingredients,
+            "explanation": explanation
+        }
+        
+        result = supabase.table("scan_history").insert(data).execute()
+        
+        if result.data:
+            logger.info(f"Scan history saved: {scan_id}")
+            return True
+        else:
+            logger.warning(f"Failed to save scan history: {scan_id}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error saving scan history: {e}", exc_info=True)
+        return False
 
 
 @router.post("/scan/barcode", tags=["Scan"], response_model=BarcodeLookupResponse)
@@ -180,17 +288,62 @@ async def scan_barcode_with_assessment(
         scan_id = str(uuid.uuid4())
         timestamp = datetime.utcnow().isoformat() + "Z"
         
+        # Step 3: Hardcoded safer alternatives for Always pads barcode
+        safer_alternatives = []
+        if barcode == "037000561538":
+            # Always pads - show organic alternatives with purchase links
+            safer_alternatives = [
+                {
+                    "id": 29,
+                    "brand_name": "Rael Organic Cotton Cover Pads",
+                    "product_type": "pad",
+                    "safety_label": "Safe",
+                    "url": "https://www.getrael.com/collections/pads/products/petite-organic-cotton-pads?variant=51779702718829"
+                },
+                {
+                    "id": 30,
+                    "brand_name": "Cora Organic Ultra Thin Period Pads",
+                    "product_type": "pad",
+                    "safety_label": "Safe",
+                    "url": "https://www.walmart.com/ip/Cora-Compact-Applicator-Tampons-100-Organic-Cotton-Regular-Super-32-Count/693365963"
+                },
+                {
+                    "id": 31,
+                    "brand_name": "Organyc Heavy Night Pads",
+                    "product_type": "pad",
+                    "safety_label": "Safe",
+                    "url": "https://thehoneypot.co/products/organic-duo-pack-tampons?variant=32026105249885&country=US&currency=USD"
+                }
+            ]
+        
         response = {
             "scan_id": scan_id,
             "user_id": user_id,
             "product": product,
             "overall_risk_level": assessment.get("risk_level", "Caution"),
+            "risk_score": assessment.get("risk_score"),
             "risky_ingredients": assessment.get("risky_ingredients", []),
             "explanation": assessment.get("explanation", "Unable to generate assessment"),
+            "safer_alternatives": safer_alternatives,
             "timestamp": timestamp
         }
         
         logger.info(f"Barcode assessment completed. Risk Level: {response['overall_risk_level']}")
+        
+        # Save scan to history (non-blocking - don't fail if this errors)
+        try:
+            await save_scan_to_history(
+                scan_id=scan_id,
+                user_id=user_id,
+                product=product,
+                risk_level=response['overall_risk_level'],
+                risk_score=assessment.get("risk_score"),
+                risky_ingredients=response['risky_ingredients'],
+                explanation=response['explanation']
+            )
+        except Exception as e:
+            # Non-blocking error - don't fail the scan if history save fails
+            logger.warning(f"Could not save scan history: {e}")
         
         return response
     
@@ -201,6 +354,93 @@ async def scan_barcode_with_assessment(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An unexpected error occurred: {str(e)}"
+        )
+
+
+@router.get("/scan/history", tags=["Scan"])
+async def get_scan_history(
+    user_id: str = Query(..., description="User ID to fetch scan history for"),
+    limit: int = Query(10, ge=1, le=50, description="Number of recent scans to return")
+) -> dict:
+    """
+    Get user's recent scan history
+    
+    Args:
+        user_id: User ID
+        limit: Number of recent scans (default 10, max 50)
+        
+    Returns:
+        JSON response with:
+        - scans: List of recent scans with product details
+        - count: Total number of scans returned
+        
+    Raises:
+        HTTPException 400: Invalid user_id
+        HTTPException 500: Database error
+    """
+    try:
+        if not user_id or not user_id.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="user_id is required"
+            )
+        
+        supabase = get_supabase_client()
+        
+        # Query scan_history joined with products
+        result = supabase.table("scan_history") \
+            .select("""
+                id,
+                scan_id,
+                barcode,
+                risk_level,
+                risk_score,
+                scanned_at,
+                products:product_id (
+                    id,
+                    brand_name,
+                    product_type
+                )
+            """) \
+            .eq("user_id", user_id) \
+            .order("scanned_at", desc=True) \
+            .limit(limit) \
+            .execute()
+        
+        if not result.data:
+            return {
+                "scans": [],
+                "count": 0
+            }
+        
+        # Format response
+        scans = []
+        for scan in result.data:
+            product_data = scan.get("products")
+            scans.append({
+                "scan_id": scan["scan_id"],
+                "barcode": scan["barcode"],
+                "brand_name": product_data.get("brand_name") if product_data else "Unknown",
+                "product_type": product_data.get("product_type") if product_data else "general",
+                "risk_level": scan["risk_level"],
+                "risk_score": scan.get("risk_score"),
+                "scanned_at": scan["scanned_at"]
+            })
+        
+        logger.info(f"Retrieved {len(scans)} scan history records for user {user_id}")
+        
+        return {
+            "scans": scans,
+            "count": len(scans)
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching scan history: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch scan history: {str(e)}"
         )
 
 

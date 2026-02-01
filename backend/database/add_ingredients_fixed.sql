@@ -46,8 +46,8 @@ ORDER BY name;
 
 INSERT INTO products (brand_name, barcode, product_type, ingredients, coverage_score, research_count, status, created_at, updated_at)
 VALUES (
-  'YOUR_BRAND_NAME',
-  'YOUR_BARCODE_HERE',
+  'Tampax Pearl',
+  '073010719743',
   'tampon',
   ARRAY[47, 53, 51, 52, 54, 3, 32, 36, 2],  -- Cotton, Ethoxylated Fatty Acid Esters, Glycerin, Paraffin, PEG-100 Stearate, Polyester, Polyethylene, Polypropylene, Rayon
   0.85,

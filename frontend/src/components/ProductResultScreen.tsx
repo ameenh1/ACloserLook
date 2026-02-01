@@ -5,11 +5,14 @@ import { ArrowLeft, CheckCircle, AlertTriangle, XCircle, Loader2, Shield, Shield
 import { supabase } from "../lib/supabase";
 import "./ProductResultScreen.css";
 import alwaysPadImage from "../assets/61Hqf13WNcL._AC_UF1000,1000_QL80_.jpg";
+import tampaxPearlImage from "../assets/817YKHYbLPS._AC_UF1000,1000_QL80_.jpg";
 
 // Product images map by barcode or brand name
 const PRODUCT_IMAGES: Record<string, string> = {
   '037000818052': alwaysPadImage,
   'always': alwaysPadImage,
+  '073010719743': tampaxPearlImage,
+  'tampax': tampaxPearlImage,
 };
 
 interface RiskyIngredient {
@@ -28,6 +31,14 @@ interface ProductData {
   research_count?: number;
 }
 
+interface SaferAlternative {
+  id: number;
+  brand_name: string;
+  product_type: string;
+  safety_label: string;
+  url?: string;
+}
+
 interface AssessmentData {
   scan_id: string;
   user_id: string;
@@ -36,6 +47,7 @@ interface AssessmentData {
   risk_score?: number; // 0-100, where 100 is safest
   risky_ingredients: RiskyIngredient[];
   explanation: string;
+  safer_alternatives?: SaferAlternative[];
   timestamp: string;
 }
 
@@ -44,6 +56,7 @@ interface AlternativeProduct {
   brand_name: string;
   product_type: string;
   risk_level: string;
+  url?: string;
 }
 
 interface ProductResultScreenProps {
@@ -121,8 +134,14 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
           const data: AssessmentData = await response.json();
           setAssessmentData(data);
 
-          // If product is risky, fetch alternatives
-          if (data.overall_risk_level === "High Risk" || data.overall_risk_level === "Caution") {
+          // Use safer_alternatives from backend response if available
+          if (data.safer_alternatives && data.safer_alternatives.length > 0) {
+            setAlternatives(data.safer_alternatives.map(p => ({
+              ...p,
+              risk_level: "Low Risk"
+            })));
+          } else if (data.overall_risk_level === "High Risk" || data.overall_risk_level === "Caution") {
+            // Fallback: fetch alternatives from Supabase if not provided by backend
             fetchAlternatives(data.product.product_type);
           }
         } else {
@@ -542,26 +561,44 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
               </h3>
             </div>
             <div className="space-y-3">
-              {alternatives.map((alt) => (
-                <div key={alt.id} className="bg-[#3a2849]/60 border border-[#a380a8]/20 rounded-[12px] p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white tracking-[-0.65px]">
-                        {alt.brand_name}
-                      </p>
-                      <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white tracking-[-0.6px]">
-                        {alt.product_type}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 bg-green-500/20 px-2 py-1 rounded-full">
-                      <ShieldCheck size={12} className="text-green-400" />
-                      <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] text-green-400">
-                        Safe
-                      </span>
+              {alternatives.map((alt) => {
+                // Hardcoded URLs for specific alternatives
+                const productUrls: Record<string, string> = {
+                  "Rael Organic Cotton Cover Pads": "https://www.getrael.com/collections/pads/products/petite-organic-cotton-pads?variant=51779702718829",
+                  "Cora Organic Ultra Thin Period Pads": "https://www.walmart.com/ip/Cora-Compact-Applicator-Tampons-100-Organic-Cotton-Regular-Super-32-Count/693365963",
+                  "Organyc Heavy Night Pads": "https://thehoneypot.co/products/organic-duo-pack-tampons?variant=32026105249885&country=US&currency=USD"
+                };
+                const url = alt.url || productUrls[alt.brand_name];
+                
+                return (
+                  <div 
+                    key={alt.id} 
+                    onClick={() => {
+                      if (url) {
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                    className={`bg-[#3a2849]/60 border border-[#a380a8]/20 rounded-[12px] p-4 ${url ? 'hover:bg-[#4a3859]/60 hover:border-[#a380a8]/40 transition-all cursor-pointer' : ''}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white tracking-[-0.65px]">
+                          {alt.brand_name}
+                        </p>
+                        <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white/70 tracking-[-0.6px]">
+                          {alt.product_type}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 bg-green-500/20 px-2 py-1 rounded-full">
+                        <ShieldCheck size={12} className="text-green-400" />
+                        <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] text-green-400">
+                          Safe
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

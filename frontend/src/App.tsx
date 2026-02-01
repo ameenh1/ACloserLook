@@ -34,6 +34,17 @@ export default function App() {
     setCurrentScreen("result");
   };
 
+  const handleScanProduct = (barcode?: string) => {
+    if (barcode) {
+      // User clicked on recent scan - go directly to results
+      setScannedBarcode(barcode);
+      setCurrentScreen("result");
+    } else {
+      // User wants to scan new product
+      setCurrentScreen("scanner");
+    }
+  };
+
   return (
     <div className="size-full flex items-center justify-center bg-black">
       {currentScreen === "home" && (
@@ -43,20 +54,20 @@ export default function App() {
         />
       )}
       {currentScreen === "login" && (
-        <LoginScreen 
-          onBack={() => setCurrentScreen("home")} 
+        <LoginScreen
+          onBack={() => setCurrentScreen("home")}
           onLoginSuccess={handleLogin}
         />
       )}
       {currentScreen === "create-account" && (
-        <CreateAccountScreen 
-          onBack={() => setCurrentScreen("home")} 
+        <CreateAccountScreen
+          onBack={() => setCurrentScreen("home")}
           onAccountCreated={handleCreateAccount}
         />
       )}
       {currentScreen === "homepage" && (
         <HomePageScreen
-          onScanProduct={() => setCurrentScreen("scanner")}
+          onScanProduct={handleScanProduct}
           onLogout={handleLogout}
           onProfile={() => setCurrentScreen("profile")}
         />
