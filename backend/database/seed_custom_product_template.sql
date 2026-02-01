@@ -20,9 +20,9 @@ INSERT INTO products (
   updated_at
 )
 VALUES (
-  'YOUR_BRAND_NAME',                    -- e.g., 'Kotex Natural'
-  'YOUR_BARCODE_HERE',                  -- e.g., '012345678901' (must be unique)
-  'YOUR_PRODUCT_TYPE',                  -- e.g., 'tampon' or 'pad'
+  'Always',                    -- e.g., 'Kotex Natural'
+  '037000561538',                  -- e.g., '012345678901' (must be unique)
+  'pad',                  -- e.g., 'tampon' or 'pad'
   ARRAY[ID1, ID2, ID3, ID4],            -- e.g., ARRAY[1, 5, 12, 45] (ingredient IDs found above)
   YOUR_COVERAGE_SCORE,                  -- e.g., 0.85 (float between 0 and 1)
   YOUR_RESEARCH_COUNT,                  -- e.g., 15 (integer, number of research studies)
