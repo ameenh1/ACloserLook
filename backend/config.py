@@ -9,17 +9,33 @@ from pathlib import Path
 from typing import List, Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
-from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
-# Load .env from project root (parent of backend directory)
-env_path = Path(__file__).parent.parent / ".env"
-if env_path.exists():
-    load_dotenv(env_path)
-    logger.info(f"Loaded .env from {env_path}")
+# Detect if running on Vercel (serverless environment)
+IS_VERCEL = os.environ.get('VERCEL', '') == '1' or os.environ.get('VERCEL_ENV', '') != ''
+
+# Only attempt to load .env in local development, not on Vercel
+if not IS_VERCEL:
+    try:
+        from dotenv import load_dotenv
+        # Load .env from project root (parent of backend directory)
+        env_path = Path(__file__).parent.parent / ".env"
+        if env_path.exists():
+            load_dotenv(env_path)
+            logger.info(f"Loaded .env from {env_path}")
+        else:
+            # Also try loading from backend directory itself
+            backend_env = Path(__file__).parent / ".env"
+            if backend_env.exists():
+                load_dotenv(backend_env)
+                logger.info(f"Loaded .env from {backend_env}")
+            else:
+                logger.debug("No .env file found - using system environment variables")
+    except ImportError:
+        logger.debug("python-dotenv not available - using system environment variables")
 else:
-    logger.warning(f".env not found at {env_path}, using system environment variables")
+    logger.info("Running on Vercel - using Vercel environment variables")
 
 
 class Settings(BaseSettings):
@@ -146,6 +162,40 @@ class Settings(BaseSettings):
         return v
 
 
+def _check_required_env_vars():
+    """Check for required environment variables and provide clear error messages"""
+    required_vars = [
+        ('SUPABASE_URL', 'Supabase project URL - find in Supabase Dashboard → Settings → API'),
+        ('SUPABASE_KEY', 'Supabase anon/public key - find in Supabase Dashboard → Settings → API'),
+        ('SUPABASE_SERVICE_ROLE_KEY', 'Supabase service role key - find in Supabase Dashboard → Settings → API'),
+    ]
+    
+    missing = []
+    for var_name, description in required_vars:
+        value = os.environ.get(var_name, '')
+        if not value:
+            missing.append(f"  - {var_name}: {description}")
+    
+    if missing:
+        error_msg = (
+            "\n\n❌ MISSING REQUIRED ENVIRONMENT VARIABLES ❌\n"
+            "The following environment variables must be set:\n\n"
+            + "\n".join(missing) +
+            "\n\n"
+            "If deploying to Vercel:\n"
+            "  1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables\n"
+            "  2. Add each missing variable\n"
+            "  3. Redeploy your project\n\n"
+            "For local development:\n"
+            "  1. Copy .env.example to .env\n"
+            "  2. Fill in the required values\n"
+        )
+        logger.error(error_msg)
+        raise EnvironmentError(error_msg)
+
+# Pre-check environment variables for better error messages
+_check_required_env_vars()
+
 # Load settings with environment validation
 try:
     settings = Settings()
@@ -163,8 +213,13 @@ try:
             raise ValueError("DEBUG must be False in production")
         
         if not settings.OPENAI_API_KEY:
-            logger.error("❌ OPENAI_API_KEY is required in production!")
-            raise ValueError("OPENAI_API_KEY is required")
+            error_msg = (
+                "\n\n❌ OPENAI_API_KEY REQUIRED IN PRODUCTION ❌\n"
+                "The OPENAI_API_KEY environment variable must be set for production.\n"
+                "Get your API key from: https://platform.openai.com/api-keys\n"
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         
         if not settings.SENTRY_DSN:
             logger.warning("⚠️ SENTRY_DSN not configured. Error tracking disabled.")
@@ -173,6 +228,15 @@ try:
         logger.info(f"✓ Logging level: {settings.LOG_LEVEL}")
         logger.info(f"✓ CORS origins configured: {len(settings.CORS_ORIGINS)} origins")
 
-except Exception as e:
-    logger.error(f"❌ Failed to load configuration: {e}")
+except EnvironmentError:
+    # Re-raise environment errors as-is (already have good messages)
     raise
+except Exception as e:
+    error_msg = (
+        f"\n\n❌ CONFIGURATION ERROR ❌\n"
+        f"Failed to load configuration: {e}\n\n"
+        f"This usually means an environment variable has an invalid format.\n"
+        f"Check that all values are correctly formatted.\n"
+    )
+    logger.error(error_msg)
+    raise ValueError(error_msg) from e
