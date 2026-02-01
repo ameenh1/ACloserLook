@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # FastAPI Configuration
     HOST: str = Field(default="0.0.0.0", description="FastAPI server host")
     PORT: int = Field(default=8000, description="FastAPI server port")
-    DEBUG: bool = Field(default=False, description="Debug mode flag")
+    DEBUG: bool | str = Field(default=False, description="Debug mode flag")
     
     # CORS Configuration
     CORS_ORIGINS: str | List[str] = Field(
@@ -78,22 +78,32 @@ class Settings(BaseSettings):
         case_sensitive = True
         extra = "allow"
     
+    @field_validator('DEBUG', mode='before')
+    @classmethod
+    def validate_debug(cls, v):
+        """Convert string boolean to actual boolean"""
+        if isinstance(v, str):
+            return v.lower() in ('true', '1', 'yes', 'on')
+        return bool(v)
+    
     @field_validator('ENVIRONMENT')
     @classmethod
     def validate_environment(cls, v):
-        """Validate environment value"""
-        if v not in ['development', 'staging', 'production']:
+        """Validate environment value (case-insensitive)"""
+        v_lower = v.lower() if isinstance(v, str) else v
+        if v_lower not in ['development', 'staging', 'production']:
             raise ValueError(f"ENVIRONMENT must be one of: development, staging, production. Got: {v}")
-        return v
+        return v_lower
     
     @field_validator('LOG_LEVEL')
     @classmethod
     def validate_log_level(cls, v):
-        """Validate log level value"""
+        """Validate log level value (case-insensitive)"""
+        v_upper = v.upper() if isinstance(v, str) else v
         valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-        if v not in valid_levels:
+        if v_upper not in valid_levels:
             raise ValueError(f"LOG_LEVEL must be one of: {', '.join(valid_levels)}. Got: {v}")
-        return v
+        return v_upper
     
     @field_validator('CORS_ORIGINS')
     @classmethod

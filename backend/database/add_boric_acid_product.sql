@@ -32,8 +32,8 @@ ORDER BY name;
 
 INSERT INTO products (brand_name, barcode, product_type, ingredients, coverage_score, research_count, status, created_at, updated_at)
 VALUES (
-  'YOUR_BRAND_NAME',
-  'YOUR_BARCODE_HERE',
+  'Boric Acid Supplement',
+  '860000501187',
   'supplement',                         -- FIRST run add_supplement_product_type.sql to enable this type
   ARRAY[55, 56],                        -- Boric Acid (NF Grade), Gelatin Capsule
   0.85,
