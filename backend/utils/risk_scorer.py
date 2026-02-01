@@ -110,6 +110,7 @@ async def generate_risk_score(
 async def _fetch_user_sensitivities(user_id: str) -> List[str]:
     """
     Fetch user's known sensitivities from Supabase profiles table
+    Returns empty list for anonymous users
     
     Args:
         user_id: User identifier
@@ -121,6 +122,11 @@ async def _fetch_user_sensitivities(user_id: str) -> List[str]:
         RiskScorerError: If database query fails
     """
     try:
+        # Skip query for anonymous or missing user_id
+        if not user_id or user_id == "anonymous":
+            logger.info("Anonymous user - no sensitivities to fetch")
+            return []
+        
         supabase = get_supabase_client()
         
         # Query profiles table for user sensitivities
@@ -231,7 +237,7 @@ async def _generate_llm_assessment(
         logger.debug("Calling OpenAI LLM for risk assessment")
         
         # Call OpenAI API with health expert system prompt
-        response = client.messages.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             max_tokens=1024,
             temperature=0.7,
@@ -248,7 +254,7 @@ async def _generate_llm_assessment(
         )
         
         # Extract response text
-        response_text = response.content[0].text.strip()
+        response_text = response.choices[0].message.content.strip()
         logger.debug(f"LLM response: {response_text}")
         
         # Parse JSON response
