@@ -109,10 +109,10 @@ app = FastAPI(
 # Configure CORS middleware FIRST - must be before other middleware to handle OPTIONS requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],  # Temporarily allow all origins for debugging
+    allow_credentials=False,  # Must be False when using "*"
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
+    allow_headers=["*"],
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 
@@ -183,6 +183,16 @@ async def log_requests(request: Request, call_next):
 app.include_router(scan.router, prefix="/api")
 app.include_router(profiles.router, prefix="/api")
 app.include_router(ingredients.router, prefix="/api")
+
+
+# Global OPTIONS handler for CORS preflight
+@app.options("/{full_path:path}", include_in_schema=False)
+async def options_handler(full_path: str):
+    """
+    Handle OPTIONS preflight requests for CORS
+    Returns 200 OK with appropriate CORS headers (set by CORSMiddleware)
+    """
+    return {"status": "ok"}
 
 
 @app.get("/health", tags=["Health"])

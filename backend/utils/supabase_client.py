@@ -47,8 +47,28 @@ def initialize_supabase() -> Client:
             "Please set SUPABASE_URL and SUPABASE_KEY environment variables."
         )
     
+    # Validate URL format
+    if not settings.SUPABASE_URL.startswith("https://"):
+        raise ValueError(
+            f"SUPABASE_URL must start with 'https://'. "
+            f"Got: {settings.SUPABASE_URL[:20]}... "
+            "Check your Vercel environment variables."
+        )
+    
+    # Validate key format (Supabase keys are JWT tokens starting with 'eyJ')
+    if not settings.SUPABASE_KEY.startswith("eyJ"):
+        raise ValueError(
+            "SUPABASE_KEY appears to be invalid. "
+            "It should be a JWT token starting with 'eyJ'. "
+            "Make sure you copied the full key from Supabase Dashboard → Settings → API. "
+            f"Current key starts with: {settings.SUPABASE_KEY[:10]}..."
+        )
+    
     try:
         logger.info("Initializing Supabase client with connection pooling")
+        logger.debug(f"Supabase URL: {settings.SUPABASE_URL}")
+        logger.debug(f"Supabase Key (first 20 chars): {settings.SUPABASE_KEY[:20]}...")
+        
         _supabase_client = create_client(
             supabase_url=settings.SUPABASE_URL,
             supabase_key=settings.SUPABASE_KEY
@@ -61,8 +81,27 @@ def initialize_supabase() -> Client:
         logger.info("Supabase client initialized successfully with pooling enabled")
         return _supabase_client
     
+    except TypeError as e:
+        # Handle version mismatch issues (like the 'proxy' argument error)
+        if "proxy" in str(e):
+            logger.error(
+                "Supabase/httpx version mismatch detected. "
+                "Please update requirements.txt: supabase>=2.10.0 and httpx>=0.27.0"
+            )
+        raise
+    
     except Exception as e:
-        logger.error(f"Failed to initialize Supabase client: {e}")
+        error_msg = str(e).lower()
+        if "invalid" in error_msg and "key" in error_msg:
+            logger.error(
+                f"Invalid Supabase API key. Please verify:\n"
+                f"  1. You copied the FULL key from Supabase Dashboard\n"
+                f"  2. No extra spaces or newlines in the value\n"
+                f"  3. You're using the 'anon' (public) key, not the service role key for SUPABASE_KEY\n"
+                f"  Original error: {e}"
+            )
+        else:
+            logger.error(f"Failed to initialize Supabase client: {e}")
         raise
 
 
