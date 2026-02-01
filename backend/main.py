@@ -109,10 +109,10 @@ app = FastAPI(
 # Configure CORS middleware FIRST - must be before other middleware to handle OPTIONS requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],  # Temporarily allow all origins for debugging
+    allow_credentials=False,  # Must be False when using "*"
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
+    allow_headers=["*"],
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 
