@@ -281,6 +281,18 @@
       "name": "PEG-100 Stearate",
       "description": "Coating agent that helps fibers wick fluid efficiently, improving overall absorbency",
       "risk_level": "Low"
+    },
+    {
+      "id": 55,
+      "name": "Boric Acid (NF Grade)",
+      "description": "Pharmaceutical grade boric acid used for vaginal pH balance and yeast infection treatment",
+      "risk_level": "Medium"
+    },
+    {
+      "id": 56,
+      "name": "Gelatin Capsule",
+      "description": "Natural gelatin capsule shell used to contain and deliver active ingredients",
+      "risk_level": "Low"
     }
   ]
 }

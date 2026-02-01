@@ -1,6 +1,6 @@
 {
-  "supabase_count": 47,
-  "local_json_count": 47,
+  "supabase_count": 49,
+  "local_json_count": 49,
   "supabase_ingredients": [
     {
       "id": 1,
@@ -328,6 +328,20 @@
       "id": 54,
       "name": "PEG-100 Stearate",
       "description": "Coating agent that helps fibers wick fluid efficiently, improving overall absorbency",
+      "risk_level": "Low",
+      "has_embedding": true
+    },
+    {
+      "id": 55,
+      "name": "Boric Acid (NF Grade)",
+      "description": "Pharmaceutical grade boric acid used for vaginal pH balance and yeast infection treatment",
+      "risk_level": "Medium",
+      "has_embedding": true
+    },
+    {
+      "id": 56,
+      "name": "Gelatin Capsule",
+      "description": "Natural gelatin capsule shell used to contain and deliver active ingredients",
       "risk_level": "Low",
       "has_embedding": true
     }
