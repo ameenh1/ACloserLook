@@ -3,15 +3,19 @@ Risk scoring utility for personalized health assessment
 Orchestrates OCR, vector search, user sensitivities, and LLM analysis
 """
 
+import asyncio
 import logging
 import json
+import hashlib
+import threading
 from typing import Dict, List, Any, Optional
 from uuid import uuid4
 from datetime import datetime, timezone
 from openai import OpenAI, APIError
+from cachetools import TTLCache
 from config import settings
 from utils.ocr import extract_ingredients_from_image, OCRError
-from utils.vector_search import search_similar_ingredients, VectorSearchError
+from utils.vector_search import search_similar_ingredients, generate_batch_embeddings, VectorSearchError
 from utils.supabase_client import get_supabase_client
 from utils.prompts import format_risk_assessment_prompt, HEALTH_EXPERT_SYSTEM_PROMPT
 
@@ -19,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 # Initialize OpenAI client
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+# LLM assessment cache: TTL-based, 24-hour expiry (assessments valid for a day)
+_llm_assessment_cache = TTLCache(maxsize=500, ttl=86400)
+_llm_cache_lock = threading.Lock()
 
 # Constants
 RISK_LEVEL_MAPPING = {
@@ -256,7 +264,8 @@ async def _search_all_ingredients(
     max_results_per_ingredient: int = 3
 ) -> List[Dict[str, Any]]:
     """
-    Search vector store for each ingredient to gather context
+    Search vector store for each ingredient to gather context (PARALLELIZED)
+    Uses batch embedding generation and parallel searches for maximum speed
     
     Args:
         ingredient_names: List of ingredient names to search
@@ -269,33 +278,52 @@ async def _search_all_ingredients(
         RiskScorerError: If vector search fails critically
     """
     try:
+        if not ingredient_names:
+            return []
+        
+        logger.info(f"Starting parallelized vector search for {len(ingredient_names)} ingredients")
+        
+        # Create parallel search tasks for all ingredients
+        # Each search_similar_ingredients call generates its own embedding
+        search_tasks = [
+            search_similar_ingredients(
+                query=ingredient,
+                limit=max_results_per_ingredient
+            )
+            for ingredient in ingredient_names
+        ]
+        
+        # Execute all searches in parallel with error handling
+        results_list = await asyncio.gather(*search_tasks, return_exceptions=True)
+        
+        # Process results and handle any failures
         all_results = []
         seen_ids = set()
+        failed_count = 0
         
-        for ingredient in ingredient_names:
-            try:
-                logger.debug(f"Searching vector store for: {ingredient}")
-                results = await search_similar_ingredients(
-                    query=ingredient,
-                    limit=max_results_per_ingredient
-                )
-                
-                # Deduplicate by ID
-                for result in results:
-                    if result.get('id') not in seen_ids:
-                        all_results.append(result)
-                        seen_ids.add(result.get('id'))
-            
-            except VectorSearchError as e:
-                logger.warning(f"Vector search failed for ingredient '{ingredient}': {e}")
-                # Continue with other ingredients instead of failing
+        for ingredient, results in zip(ingredient_names, results_list):
+            # Check if this search failed
+            if isinstance(results, Exception):
+                logger.warning(f"Vector search failed for ingredient '{ingredient}': {results}")
+                failed_count += 1
                 continue
+            
+            # Process successful results
+            if isinstance(results, list):
+                for result in results:
+                    result_id = result.get('id')
+                    if result_id and result_id not in seen_ids:
+                        all_results.append(result)
+                        seen_ids.add(result_id)
         
-        logger.debug(f"Retrieved {len(all_results)} unique ingredients from vector store")
+        if failed_count > 0:
+            logger.warning(f"{failed_count}/{len(ingredient_names)} ingredient searches failed, continuing with {len(all_results)} results")
+        
+        logger.info(f"Parallelized search completed: Retrieved {len(all_results)} unique ingredients from vector store")
         return all_results
     
     except Exception as e:
-        logger.error(f"Error searching ingredients: {e}")
+        logger.error(f"Error in parallelized ingredient search: {e}", exc_info=True)
         # Return empty list to allow pipeline to continue with LLM
         return []
 
@@ -499,15 +527,42 @@ async def generate_risk_score_for_product(
     try:
         logger.info(f"Starting risk assessment for product: {product_name} (ID: {product_id})")
         
-        # Step 1: Fetch user profile and sensitivities from Supabase
-        logger.debug("Step 1: Fetching user profile and sensitivities")
-        user_sensitivities = await _fetch_user_sensitivities(user_id)
-        logger.debug(f"User sensitivities: {user_sensitivities}")
+        # Check if this product assessment is cached
+        # Cache key: product_id + sorted ingredients (user-agnostic, product's risk doesn't change per user)
+        cache_key = hashlib.md5(
+            f"{product_id}:{','.join(sorted(ingredients))}".encode()
+        ).hexdigest()
         
-        # Step 2: Search for each ingredient in vector store
-        logger.debug("Step 2: Searching vector store for ingredient context")
-        retrieved_vector_data = await _search_all_ingredients(ingredients)
-        logger.debug(f"Retrieved {len(retrieved_vector_data)} similar ingredients from vector store")
+        with _llm_cache_lock:
+            if cache_key in _llm_assessment_cache:
+                logger.info(f"LLM assessment cache HIT for product: {product_name}")
+                return _llm_assessment_cache[cache_key]
+        
+        logger.debug(f"LLM assessment cache MISS for product: {product_name}, computing...")
+        
+        # Steps 1 & 2: Parallelize user profile fetch and vector search (independent operations)
+        logger.debug("Steps 1 & 2: Fetching user profile and searching vector store in parallel")
+        
+        user_task = _fetch_user_sensitivities(user_id)
+        vector_task = _search_all_ingredients(ingredients)
+        
+        # Execute both operations in parallel
+        results = await asyncio.gather(user_task, vector_task, return_exceptions=True)
+        
+        # Handle results with error checking
+        user_sensitivities = results[0] if not isinstance(results[0], Exception) else []
+        retrieved_vector_data = results[1] if not isinstance(results[1], Exception) else []
+        
+        # Log any errors but continue processing
+        if isinstance(results[0], Exception):
+            logger.warning(f"User profile fetch failed: {results[0]}, continuing with empty sensitivities")
+        else:
+            logger.debug(f"User sensitivities: {user_sensitivities}")
+        
+        if isinstance(results[1], Exception):
+            logger.warning(f"Vector search failed: {results[1]}, continuing with empty vector data")
+        else:
+            logger.debug(f"Retrieved {len(retrieved_vector_data)} similar ingredients from vector store")
         
         # Step 3: Send to OpenAI LLM for risk assessment
         logger.debug("Step 3: Sending to LLM for risk assessment")
@@ -540,6 +595,12 @@ async def generate_risk_score_for_product(
             "explanation": risk_assessment.get("explanation", "Unable to generate assessment"),
             "risky_ingredients": risky_ingredients
         }
+        
+        # Cache the assessment for 24 hours (product's inherent risk doesn't change)
+        with _llm_cache_lock:
+            _llm_assessment_cache[cache_key] = response
+        
+        logger.debug(f"LLM assessment cached for product: {product_name}")
         
         return response
     

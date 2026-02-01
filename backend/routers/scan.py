@@ -7,7 +7,7 @@ import logging
 import uuid
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, Query, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from models.schemas import BarcodeLookupRequest, BarcodeLookupResponse, BarcodeProduct
 from utils.barcode_lookup import lookup_product_by_barcode, BarcodeLookupError
@@ -86,6 +86,7 @@ async def save_scan_to_history(
 ) -> bool:
     """
     Save scan to scan_history table in Supabase
+    Non-blocking function - runs in background task
     
     Args:
         scan_id: Unique UUID for this scan
@@ -123,7 +124,15 @@ async def save_scan_to_history(
             return False
             
     except Exception as e:
-        logger.error(f"Error saving scan history: {e}", exc_info=True)
+        # Log error but don't crash - this is a background task
+        error_msg = str(e)
+        
+        # RLS errors are expected in some environments - log as warning
+        if "row-level security policy" in error_msg or "401 Unauthorized" in error_msg:
+            logger.warning(f"Scan history save blocked by RLS policy (expected in some envs): {scan_id}")
+        else:
+            logger.error(f"Error saving scan history: {e}", exc_info=True)
+        
         return False
 
 
@@ -205,7 +214,8 @@ async def scan_barcode(
 
 @router.post("/scan/barcode/assess", tags=["Scan"])
 async def scan_barcode_with_assessment(
-    request: BarcodeLookupRequest
+    request: BarcodeLookupRequest,
+    background_tasks: BackgroundTasks
 ) -> dict:
     """
     Scan barcode and generate personalized health risk assessment
@@ -330,20 +340,17 @@ async def scan_barcode_with_assessment(
         
         logger.info(f"Barcode assessment completed. Risk Level: {response['overall_risk_level']}")
         
-        # Save scan to history (non-blocking - don't fail if this errors)
-        try:
-            await save_scan_to_history(
-                scan_id=scan_id,
-                user_id=user_id,
-                product=product,
-                risk_level=response['overall_risk_level'],
-                risk_score=assessment.get("risk_score"),
-                risky_ingredients=response['risky_ingredients'],
-                explanation=response['explanation']
-            )
-        except Exception as e:
-            # Non-blocking error - don't fail the scan if history save fails
-            logger.warning(f"Could not save scan history: {e}")
+        # Save scan to history in background (non-blocking for faster response)
+        background_tasks.add_task(
+            save_scan_to_history,
+            scan_id=scan_id,
+            user_id=user_id,
+            product=product,
+            risk_level=response['overall_risk_level'],
+            risk_score=assessment.get("risk_score"),
+            risky_ingredients=response['risky_ingredients'],
+            explanation=response['explanation']
+        )
         
         return response
     
