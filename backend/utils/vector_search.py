@@ -67,6 +67,53 @@ async def generate_query_embedding(query: str) -> List[float]:
         raise VectorSearchError(f"Error generating embedding: {e}")
 
 
+async def generate_batch_embeddings(queries: List[str]) -> List[List[float]]:
+    """
+    Generate embeddings for multiple queries in a single API call (batch processing)
+    More efficient than calling generate_query_embedding() multiple times
+    
+    Args:
+        queries: List of query strings to generate embeddings for
+        
+    Returns:
+        List of embedding vectors (1536 dimensions each)
+        
+    Raises:
+        VectorSearchError: If embedding generation fails
+    """
+    try:
+        if not queries:
+            return []
+        
+        # Filter out empty queries
+        valid_queries = [q.strip() for q in queries if q and q.strip()]
+        
+        if not valid_queries:
+            return []
+        
+        logger.debug(f"Generating batch embeddings for {len(valid_queries)} queries")
+        
+        # OpenAI API supports batch embedding generation
+        response = client.embeddings.create(
+            input=valid_queries,
+            model=EMBEDDING_MODEL
+        )
+        
+        # Extract embeddings in order
+        embeddings = [data.embedding for data in response.data]
+        
+        logger.info(f"Successfully generated {len(embeddings)} embeddings in batch")
+        return embeddings
+    
+    except APIError as e:
+        logger.error(f"OpenAI API error while generating batch embeddings: {e}")
+        raise VectorSearchError(f"Failed to generate batch embeddings: {e}")
+    
+    except Exception as e:
+        logger.error(f"Unexpected error generating batch embeddings: {e}")
+        raise VectorSearchError(f"Error generating batch embeddings: {e}")
+
+
 async def search_similar_ingredients(
     query: str,
     limit: int = DEFAULT_SEARCH_LIMIT,
