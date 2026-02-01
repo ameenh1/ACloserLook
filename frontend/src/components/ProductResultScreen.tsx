@@ -319,9 +319,13 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
   }
 
   // Stage 1: Show basic product info immediately (no assessment needed)
+  // For URO, don't show default "Caution" during loading - wait for actual assessment
+  const isUROProduct = barcode === '860008361769';
   const safetyDisplay = assessmentData
     ? getSafetyDisplay(assessmentData.overall_risk_level, assessmentData.risk_score)
-    : getSafetyDisplay("Caution");
+    : isUROProduct && assessmentLoading
+      ? getSafetyDisplay("Low Risk") // Show "Safe" as placeholder for URO during loading
+      : getSafetyDisplay("Caution");
   const SafetyIcon = safetyDisplay.icon;
   const isSafe = assessmentData?.overall_risk_level === "Low Risk";
 
