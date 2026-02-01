@@ -7,7 +7,7 @@ import logging
 import json
 from typing import Dict, List, Any, Optional
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from openai import OpenAI, APIError
 from config import settings
 from utils.ocr import extract_ingredients_from_image, OCRError
@@ -110,6 +110,7 @@ async def generate_risk_score(
 async def _fetch_user_sensitivities(user_id: str) -> List[str]:
     """
     Fetch user's known sensitivities from Supabase profiles table
+    Auto-creates profile on first scan if it doesn't exist
     Returns empty list for anonymous users
     
     Args:
@@ -130,31 +131,123 @@ async def _fetch_user_sensitivities(user_id: str) -> List[str]:
         supabase = get_supabase_client()
         
         # Query profiles table for user sensitivities
-        response = supabase.table('profiles').select(
-            'sensitivities'
-        ).eq('id', user_id).single().execute()
+        try:
+            logger.info(f"Attempting to fetch profile for user: {user_id}")
+            response = supabase.table('profiles').select(
+                'sensitivities'
+            ).eq('user_id', user_id).single().execute()
+            
+            if response.data:
+                sensitivities = response.data.get('sensitivities', [])
+                logger.info(f"✓ Profile found for user {user_id} - loaded sensitivities")
+                
+                # Handle different data formats
+                if isinstance(sensitivities, str):
+                    # If stored as comma-separated string
+                    sensitivities = [s.strip() for s in sensitivities.split(',') if s.strip()]
+                elif isinstance(sensitivities, list):
+                    sensitivities = [str(s).strip() for s in sensitivities if s]
+                else:
+                    sensitivities = []
+                
+                logger.debug(f"Fetched {len(sensitivities)} sensitivities for user {user_id}")
+                return sensitivities
+            else:
+                # No profile exists - create one
+                logger.warning(f"No profile found for user: {user_id} - attempting auto-create")
+                return await _create_user_profile(user_id)
         
-        if not response.data:
-            logger.warning(f"No profile found for user: {user_id}")
-            return []
-        
-        sensitivities = response.data.get('sensitivities', [])
-        
-        # Handle different data formats
-        if isinstance(sensitivities, str):
-            # If stored as comma-separated string
-            sensitivities = [s.strip() for s in sensitivities.split(',') if s.strip()]
-        elif isinstance(sensitivities, list):
-            sensitivities = [str(s).strip() for s in sensitivities if s]
-        else:
-            sensitivities = []
-        
-        logger.debug(f"Fetched {len(sensitivities)} sensitivities for user {user_id}")
-        return sensitivities
+        except Exception as fetch_error:
+            error_msg = str(fetch_error)
+            logger.warning(f"Profile fetch error: {error_msg}")
+            
+            # Check if error is "0 rows" (PGRST116) - means profile doesn't exist
+            if "0 rows" in error_msg or "PGRST116" in error_msg:
+                logger.info(f"Profile doesn't exist for user {user_id} - attempting auto-create")
+                return await _create_user_profile(user_id)
+            # Check if error is UUID validation - user_id is not a valid UUID
+            elif "invalid input syntax for type uuid" in error_msg or "22P02" in error_msg:
+                logger.error(f"Invalid user_id format (must be UUID): {user_id}")
+                logger.error("DIAGNOSTIC ADVICE:")
+                logger.error("  ✗ user_id must be a valid UUID format (e.g., 550e8400-e29b-41d4-a716-446655440000)")
+                logger.error("  ✗ Current user_id is not a valid UUID: " + user_id)
+                logger.error("  → Check frontend: Is the user authenticated with Supabase Auth?")
+                logger.error("  → Supabase Auth automatically generates valid UUIDs")
+                return []
+            else:
+                # Other Supabase errors - log and continue
+                logger.warning(f"Failed to fetch profile (non-existence error): {fetch_error}")
+                return []
     
     except Exception as e:
-        logger.warning(f"Failed to fetch user sensitivities: {e}")
+        logger.error(f"Unexpected error in _fetch_user_sensitivities: {e}", exc_info=True)
         # Return empty list instead of failing entire pipeline
+        return []
+
+
+async def _create_user_profile(user_id: str) -> List[str]:
+    """
+    Auto-create a new user profile on first scan
+    
+    Args:
+        user_id: User identifier
+        
+    Returns:
+        Empty sensitivity list (new profile has no sensitivities yet)
+    """
+    try:
+        logger.info(f"Creating new profile for user: {user_id}")
+        supabase = get_supabase_client()
+        
+        # Create new profile with empty sensitivities
+        # Note: user_id is the primary key, sensitivities should be JSON array
+        profile_data = {
+            'user_id': user_id,
+            'sensitivities': [],
+            'skin_type': '',
+            'allergies': {},
+            'conditions': {},
+            'preferences': {},
+            'price_range': ''
+        }
+        
+        response = supabase.table('profiles').insert(profile_data).execute()
+        
+        if response.data:
+            logger.info(f"✓ Successfully created profile for user: {user_id}")
+            logger.debug(f"New profile data: {response.data}")
+            return []
+        else:
+            logger.warning(f"Profile creation returned no data for user: {user_id}")
+            return []
+    
+    except Exception as e:
+        error_msg = str(e)
+        logger.warning(f"Failed to auto-create profile for user {user_id}: {error_msg}")
+        
+        # If profile already exists (race condition), try to fetch it
+        if "duplicate" in error_msg.lower() or "already exists" in error_msg.lower():
+            logger.info(f"Profile already exists for user {user_id} (race condition resolved)")
+            try:
+                supabase = get_supabase_client()
+                response = supabase.table('profiles').select(
+                    'sensitivities'
+                ).eq('user_id', user_id).single().execute()
+                
+                if response.data:
+                    sensitivities = response.data.get('sensitivities', [])
+                    if isinstance(sensitivities, str):
+                        sensitivities = [s.strip() for s in sensitivities.split(',') if s.strip()]
+                    elif isinstance(sensitivities, list):
+                        sensitivities = [str(s).strip() for s in sensitivities if s]
+                    else:
+                        sensitivities = []
+                    logger.info(f"✓ Recovered existing profile for user {user_id} after race condition")
+                    return sensitivities
+            except Exception as retry_error:
+                logger.warning(f"Failed to recover profile after race condition: {retry_error}")
+        
+        # Continue without sensitivities - don't fail the entire scan
         return []
 
 
@@ -414,3 +507,48 @@ async def generate_risk_score_for_product(
     except Exception as e:
         logger.error(f"Unexpected error in risk scoring pipeline: {e}")
         raise RiskScorerError(f"Risk scoring failed: {e}")
+
+
+async def validate_profile_exists(user_id: str) -> bool:
+   """
+   Validate that a user profile exists in the database
+   Provides detailed diagnostic information if profile is missing
+   
+   Args:
+       user_id: User identifier to validate
+       
+   Returns:
+       True if profile exists, False otherwise
+   """
+   try:
+       if not user_id or user_id == "anonymous":
+           logger.info(f"Validation: User is anonymous (user_id={user_id})")
+           return True
+       
+       supabase = get_supabase_client()
+       logger.info(f"Validating profile existence for user: {user_id}")
+       
+       response = supabase.table('profiles').select('id').eq('user_id', user_id).execute()
+       
+       if response.data and len(response.data) > 0:
+           logger.info(f"✓ Profile validation PASSED for user: {user_id}")
+           return True
+       else:
+           logger.error(f"✗ Profile validation FAILED - No profile found for user: {user_id}")
+           logger.error("DIAGNOSTIC ADVICE:")
+           logger.error("  1. This user has not created an account yet")
+           logger.error("  2. Check frontend: Is user authenticated in Supabase Auth?")
+           logger.error("  3. The profiles table should have a row with id = user_id")
+           logger.error("  4. Run this in Supabase SQL Editor to check:")
+           logger.error(f"     SELECT * FROM profiles WHERE id = '{user_id}';")
+           logger.error("  5. To debug: Check Supabase Auth > Users for this user_id")
+           return False
+   
+   except Exception as e:
+       logger.error(f"Profile validation error: {e}", exc_info=True)
+       logger.error("DIAGNOSTIC ADVICE:")
+       logger.error("  1. Check Supabase connection string in config")
+       logger.error("  2. Verify Supabase RLS policies allow profile queries")
+       logger.error("  3. Check that profiles table exists in your database")
+       logger.error("  4. Run: SELECT * FROM profiles LIMIT 1; to verify table structure")
+       return False

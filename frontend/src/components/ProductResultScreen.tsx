@@ -44,22 +44,55 @@ interface ProductResultScreenProps {
 }
 
 export default function ProductResultScreen({ barcode, onBack, onScanAnother }: ProductResultScreenProps) {
+  const [basicProduct, setBasicProduct] = useState<ProductData | null>(null);
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
   const [alternatives, setAlternatives] = useState<AlternativeProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [assessmentLoading, setAssessmentLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProductAssessment = async () => {
+    // Stage 1: Fetch basic product info immediately (no assessment)
+    const fetchBasicProduct = async () => {
       try {
-        setLoading(true);
         setError(null);
+
+        // Call basic barcode lookup (fast, no assessment)
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/scan/barcode`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ barcode: barcode }),
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error("Product not found in database");
+          }
+          throw new Error(`Failed to lookup product: ${response.statusText}`);
+        }
+
+        const basicData = await response.json();
+        setBasicProduct(basicData.product);
+
+        // Stage 2: Fetch full assessment in background (optional)
+        fetchFullAssessment();
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+        setError(errorMessage);
+        console.error("Product lookup error:", err);
+      }
+    };
+
+    const fetchFullAssessment = async () => {
+      try {
+        setAssessmentLoading(true);
 
         // Get current user for personalized assessment
         const { data: { user } } = await supabase.auth.getUser();
         const userId = user?.id || "anonymous";
 
-        // Call barcode assessment endpoint (includes risk scoring)
+        // Call barcode assessment endpoint (includes risk scoring) - runs in background
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/scan/barcode/assess`, {
           method: "POST",
           headers: {
@@ -71,53 +104,22 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
           }),
         });
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error("Product not found in database");
-          }
-          if (response.status === 422) {
-            // Fallback to basic barcode lookup if user_id issue
-            const basicResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/scan/barcode`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ barcode: barcode }),
-            });
-            
-            if (!basicResponse.ok) {
-              throw new Error("Product not found in database");
-            }
-            
-            const basicData = await basicResponse.json();
-            // Create a basic assessment from product data
-            setAssessmentData({
-              scan_id: "basic-" + Date.now(),
-              user_id: userId,
-              product: basicData.product,
-              overall_risk_level: "Caution",
-              risky_ingredients: [],
-              explanation: "Product found. Sign in to get personalized health recommendations.",
-              timestamp: new Date().toISOString(),
-            });
-            return;
-          }
-          throw new Error(`Failed to assess product: ${response.statusText}`);
-        }
+        if (response.ok) {
+          const data: AssessmentData = await response.json();
+          setAssessmentData(data);
 
-        const data: AssessmentData = await response.json();
-        setAssessmentData(data);
-
-        // If product is risky, fetch alternatives
-        if (data.overall_risk_level === "High Risk" || data.overall_risk_level === "Caution") {
-          fetchAlternatives(data.product.product_type);
+          // If product is risky, fetch alternatives
+          if (data.overall_risk_level === "High Risk" || data.overall_risk_level === "Caution") {
+            fetchAlternatives(data.product.product_type);
+          }
+        } else {
+          console.warn("Full assessment not available, showing basic product info only");
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-        setError(errorMessage);
-        console.error("Product assessment error:", err);
+        console.warn("Could not fetch full assessment:", err);
+        // Non-blocking error - user can still see basic product info
       } finally {
-        setLoading(false);
+        setAssessmentLoading(false);
       }
     };
 
@@ -142,7 +144,7 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
       }
     };
 
-    fetchProductAssessment();
+    fetchBasicProduct();
   }, [barcode]);
 
   // Get safety display properties based on risk level
@@ -187,25 +189,8 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
     }
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="bg-[#0e0808] relative w-[393px] h-[852px] overflow-hidden flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 size={48} className="text-[#a380a8] animate-spin" />
-          <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">
-            Analyzing product...
-          </p>
-          <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white/60 tracking-[-0.6px]">
-            Checking ingredients against your health profile
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error || !assessmentData) {
+  // Error state - product not found
+  if (error || !basicProduct) {
     return (
       <div className="bg-[#0e0808] relative w-[393px] h-[852px] overflow-hidden">
         <div className="absolute top-[60px] left-[24px] right-[24px] z-10">
@@ -242,12 +227,12 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
     );
   }
 
-  const safetyDisplay = getSafetyDisplay(assessmentData.overall_risk_level);
+  // Stage 1: Show basic product info immediately (no assessment needed)
+  const safetyDisplay = assessmentData ? getSafetyDisplay(assessmentData.overall_risk_level) : getSafetyDisplay("Caution");
   const SafetyIcon = safetyDisplay.icon;
-  const productData = assessmentData.product;
-  const isSafe = assessmentData.overall_risk_level === "Low Risk";
+  const isSafe = assessmentData?.overall_risk_level === "Low Risk";
 
-  // Success state - display product assessment
+  // Success state - display product info with optional assessment overlay
   return (
     <div className="bg-[#0e0808] relative w-[393px] h-[852px] overflow-hidden">
       {/* Top flower decoration */}
@@ -288,48 +273,56 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
               <h2 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[18px] text-white tracking-[-0.8px] mb-1">
-                {productData.brand_name}
+                {basicProduct.brand_name}
               </h2>
-              {productData.product_type && (
+              {basicProduct.product_type && (
                 <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] text-white/70 tracking-[-0.65px]">
-                  {productData.product_type}
+                  {basicProduct.product_type}
                 </p>
               )}
             </div>
             {/* Safety Score Circle */}
             <div className="flex flex-col items-center">
               <div className={`w-[70px] h-[70px] rounded-full border-4 ${safetyDisplay.borderColor} ${safetyDisplay.bgColor} flex items-center justify-center`}>
-                <span className={`font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[24px] ${safetyDisplay.color} font-bold`}>
-                  {safetyDisplay.score}
-                </span>
+                {assessmentLoading ? (
+                  <Loader2 size={24} className={`${safetyDisplay.color} animate-spin`} />
+                ) : (
+                  <span className={`font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[24px] ${safetyDisplay.color} font-bold`}>
+                    {safetyDisplay.score}
+                  </span>
+                )}
               </div>
               <span className={`font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[11px] ${safetyDisplay.color} mt-1`}>
-                {safetyDisplay.label}
+                {assessmentLoading ? "Analyzing..." : safetyDisplay.label}
               </span>
             </div>
           </div>
           
           {/* Safety Status */}
-          <div className="flex items-center gap-2">
-            <SafetyIcon size={20} className={safetyDisplay.color} />
-            <span className={`font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] ${safetyDisplay.color} tracking-[-0.65px]`}>
-              {isSafe ? "Safe for your health profile" : "Not recommended for your health profile"}
-            </span>
+          {assessmentData && (
+            <div className="flex items-center gap-2">
+              <SafetyIcon size={20} className={safetyDisplay.color} />
+              <span className={`font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[14px] ${safetyDisplay.color} tracking-[-0.65px]`}>
+                {isSafe ? "Safe for your health profile" : "Not recommended for your health profile"}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* AI Summary / Explanation - Only show when assessment is loaded */}
+        {assessmentData && (
+          <div className="bg-white/5 border border-white/10 rounded-[16px] p-5 mb-4">
+            <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-3">
+              Summary
+            </h3>
+            <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white/80 tracking-[-0.65px] leading-relaxed">
+              {assessmentData.explanation}
+            </p>
           </div>
-        </div>
+        )}
 
-        {/* AI Summary / Explanation */}
-        <div className="bg-white/5 border border-white/10 rounded-[16px] p-5 mb-4">
-          <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-3">
-            Summary
-          </h3>
-          <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[13px] text-white/80 tracking-[-0.65px] leading-relaxed">
-            {assessmentData.explanation}
-          </p>
-        </div>
-
-        {/* Risky Ingredients (if any) */}
-        {assessmentData.risky_ingredients && assessmentData.risky_ingredients.length > 0 && (
+        {/* Risky Ingredients (if any) - Only show when assessment is loaded */}
+        {assessmentData && assessmentData.risky_ingredients && assessmentData.risky_ingredients.length > 0 && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-[16px] p-5 mb-4">
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle size={20} className="text-red-400" />
@@ -359,15 +352,15 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
           </div>
         )}
 
-        {/* All Ingredients */}
-        {productData.ingredients && productData.ingredients.length > 0 && (
+        {/* All Ingredients - Always show (from basic product data) */}
+        {basicProduct.ingredients && basicProduct.ingredients.length > 0 && (
           <div className="bg-white/5 border border-white/10 rounded-[16px] p-5 mb-4">
             <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-3">
-              Ingredients ({productData.ingredients.length})
+              Ingredients ({basicProduct.ingredients.length})
             </h3>
             <div className="flex flex-wrap gap-2">
-              {productData.ingredients.map((ingredient, index) => {
-                const isRisky = assessmentData.risky_ingredients?.some(r => r.name.toLowerCase() === ingredient.toLowerCase());
+              {basicProduct.ingredients.map((ingredient, index) => {
+                const isRisky = assessmentData?.risky_ingredients?.some(r => r.name.toLowerCase() === ingredient.toLowerCase());
                 return (
                   <span 
                     key={index} 
@@ -383,8 +376,8 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
           </div>
         )}
 
-        {/* Alternative Products (only if not safe) */}
-        {!isSafe && alternatives.length > 0 && (
+        {/* Alternative Products (only if assessment available and not safe) */}
+        {assessmentData && !isSafe && alternatives.length > 0 && (
           <div className="bg-[#a380a8]/10 border border-[#a380a8]/30 rounded-[16px] p-5 mb-4">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck size={20} className="text-[#a380a8]" />
@@ -418,7 +411,7 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
         )}
 
         {/* Safe product encouragement */}
-        {isSafe && (
+        {assessmentData && isSafe && (
           <div className="bg-green-500/10 border border-green-500/30 rounded-[16px] p-5 mb-4">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle size={20} className="text-green-400" />
@@ -433,13 +426,13 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
         )}
 
         {/* Research Info */}
-        {productData.research_count !== undefined && productData.research_count > 0 && (
+        {basicProduct.research_count !== undefined && basicProduct.research_count > 0 && (
           <div className="bg-white/5 border border-white/10 rounded-[16px] p-5 mb-4">
             <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px] mb-2">
               Research-Backed
             </h3>
             <p className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[12px] text-white/80 tracking-[-0.6px]">
-              This product has {productData.research_count} research studies referencing its ingredients.
+              This product has {basicProduct.research_count} research studies referencing its ingredients.
             </p>
           </div>
         )}
