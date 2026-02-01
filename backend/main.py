@@ -106,17 +106,7 @@ app = FastAPI(
     openapi_url="/api/openapi.json" if settings.DEBUG else None,
 )
 
-# Add request ID middleware for tracing
-app.add_middleware(RequestIDMiddleware)
-
-# Add trusted host middleware for production security
-if settings.ENVIRONMENT == 'production':
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["*.vercel.app", "localhost", "127.0.0.1"]
-    )
-
-# Configure CORS middleware with production-safe defaults
+# Configure CORS middleware FIRST - must be before other middleware to handle OPTIONS requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -126,13 +116,28 @@ app.add_middleware(
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 
+# Add trusted host middleware for production security
+if settings.ENVIRONMENT == 'production':
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["*.vercel.app", "localhost", "127.0.0.1"]
+    )
+
+# Add request ID middleware for tracing (after CORS)
+app.add_middleware(RequestIDMiddleware)
+
 
 # Custom request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     """
     Log all incoming requests with timing information
+    Skip logging for OPTIONS (CORS preflight) requests to avoid interference
     """
+    # Skip detailed logging for OPTIONS requests - let CORS handle them
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    
     start_time = datetime.utcnow()
     request_id = getattr(request.scope, "request_id", str(uuid.uuid4()))
     
