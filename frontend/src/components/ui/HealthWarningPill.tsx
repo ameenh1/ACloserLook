@@ -33,7 +33,7 @@ export function HealthWarningPill({ name, reason, severity }: HealthWarningPillP
             {name}
           </p>
         </div>
-        <span className={`font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[10px] px-2 py-0.5 rounded-full ${bgColor} ${textColor}`}>
+        <span className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white">
           {severity}
         </span>
       </div>

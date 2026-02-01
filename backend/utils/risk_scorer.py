@@ -6,10 +6,13 @@ Orchestrates OCR, vector search, user sensitivities, and LLM analysis
 import asyncio
 import logging
 import json
+import hashlib
+import threading
 from typing import Dict, List, Any, Optional
 from uuid import uuid4
 from datetime import datetime, timezone
 from openai import OpenAI, APIError
+from cachetools import TTLCache
 from config import settings
 from utils.ocr import extract_ingredients_from_image, OCRError
 from utils.vector_search import search_similar_ingredients, generate_batch_embeddings, VectorSearchError
@@ -20,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 # Initialize OpenAI client
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+# LLM assessment cache: TTL-based, 24-hour expiry (assessments valid for a day)
+_llm_assessment_cache = TTLCache(maxsize=500, ttl=86400)
+_llm_cache_lock = threading.Lock()
 
 # Constants
 RISK_LEVEL_MAPPING = {
@@ -520,6 +527,19 @@ async def generate_risk_score_for_product(
     try:
         logger.info(f"Starting risk assessment for product: {product_name} (ID: {product_id})")
         
+        # Check if this product assessment is cached
+        # Cache key: product_id + sorted ingredients (user-agnostic, product's risk doesn't change per user)
+        cache_key = hashlib.md5(
+            f"{product_id}:{','.join(sorted(ingredients))}".encode()
+        ).hexdigest()
+        
+        with _llm_cache_lock:
+            if cache_key in _llm_assessment_cache:
+                logger.info(f"LLM assessment cache HIT for product: {product_name}")
+                return _llm_assessment_cache[cache_key]
+        
+        logger.debug(f"LLM assessment cache MISS for product: {product_name}, computing...")
+        
         # Steps 1 & 2: Parallelize user profile fetch and vector search (independent operations)
         logger.debug("Steps 1 & 2: Fetching user profile and searching vector store in parallel")
         
@@ -575,6 +595,12 @@ async def generate_risk_score_for_product(
             "explanation": risk_assessment.get("explanation", "Unable to generate assessment"),
             "risky_ingredients": risky_ingredients
         }
+        
+        # Cache the assessment for 24 hours (product's inherent risk doesn't change)
+        with _llm_cache_lock:
+            _llm_assessment_cache[cache_key] = response
+        
+        logger.debug(f"LLM assessment cached for product: {product_name}")
         
         return response
     

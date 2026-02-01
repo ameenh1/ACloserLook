@@ -448,7 +448,7 @@ export default function ProductResultScreen({ barcode, onBack, onScanAnother }: 
         {assessmentData && assessmentData.risky_ingredients && assessmentData.risky_ingredients.length > 0 && (
           <GlassCard className="bg-red-500/10 border-red-500/40 mb-6">
             <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle size={20} className="text-red-400" />
+              <AlertTriangle size={20} className="text-white" />
               <h3 className="font-['Konkhmer_Sleokchher:Regular',sans-serif] text-[16px] text-white tracking-[-0.7px]">
                 Health Warnings
               </h3>

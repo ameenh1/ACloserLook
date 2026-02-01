@@ -5,9 +5,12 @@ Implements semantic search using embeddings stored in vector database
 
 import logging
 import sys
+import threading
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from openai import OpenAI, APIError
+from cachetools import TTLCache
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -25,15 +28,56 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 DEFAULT_SEARCH_LIMIT = 5
 MAX_SEARCH_LIMIT = 20
 
+# In-memory caches (no external service required)
+# Embedding cache: permanent, LRU-based (embeddings never change)
+_embedding_cache_lock = threading.Lock()
+
+# Vector search cache: TTL-based, 1 hour expiry (recipe data rarely changes)
+_vector_search_cache = TTLCache(maxsize=500, ttl=3600)
+_vector_search_cache_lock = threading.Lock()
+
 
 class VectorSearchError(Exception):
     """Custom exception for vector search operations"""
     pass
 
 
+@lru_cache(maxsize=1000)
+def _generate_embedding_cached(query: str) -> str:
+    """
+    Generate embedding for a single query and cache the result.
+    Uses JSON serialization trick to cache in LRU cache (lists aren't hashable).
+    
+    Args:
+        query: Search query string
+        
+    Returns:
+        JSON string of embedding vector
+        
+    Note: This function is cached per query. Embeddings never change,
+    so this cache persists for the lifetime of the application.
+    """
+    try:
+        import json
+        
+        response = client.embeddings.create(
+            input=query.strip(),
+            model=EMBEDDING_MODEL
+        )
+        embedding = response.data[0].embedding
+        
+        # Return as JSON string for caching (since lists aren't hashable)
+        return json.dumps(embedding)
+    
+    except Exception as e:
+        logger.error(f"Error in cached embedding generation: {e}")
+        raise
+
+
 async def generate_query_embedding(query: str) -> List[float]:
     """
-    Generate embedding for search query using OpenAI API
+    Generate embedding for search query using OpenAI API with caching.
+    Embeddings are cached since ingredient names don't change.
     
     Args:
         query: Search query string
@@ -48,11 +92,25 @@ async def generate_query_embedding(query: str) -> List[float]:
         if not query or not query.strip():
             raise ValueError("Query cannot be empty")
         
-        response = client.embeddings.create(
-            input=query.strip(),
-            model=EMBEDDING_MODEL
-        )
-        return response.data[0].embedding
+        query = query.strip()
+        
+        # Check cache first
+        with _embedding_cache_lock:
+            try:
+                import json
+                cached_embedding_json = _generate_embedding_cached(query)
+                embedding = json.loads(cached_embedding_json)
+                logger.debug(f"Cache HIT for embedding: {query}")
+                return embedding
+            except KeyError:
+                pass  # Not in cache, proceed with generation
+        
+        # If not in cache, generate and it will be cached by _generate_embedding_cached
+        import json
+        embedding_json = _generate_embedding_cached(query)
+        embedding = json.loads(embedding_json)
+        logger.debug(f"Cache MISS, generated embedding for: {query}")
+        return embedding
     
     except ValueError as e:
         logger.error(f"Invalid query: {e}")
@@ -120,7 +178,8 @@ async def search_similar_ingredients(
     risk_level_filter: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """
-    Search for similar ingredients using semantic vector similarity
+    Search for similar ingredients using semantic vector similarity with caching.
+    Results are cached for 1 hour since ingredient database rarely changes.
     
     Args:
         query: Search query string (e.g., "fragrance effects", "synthetic fibers")
@@ -144,7 +203,16 @@ async def search_similar_ingredients(
             logger.warning(f"Invalid risk_level_filter: {risk_level_filter}, ignoring filter")
             risk_level_filter = None
         
-        logger.info(f"Searching for similar ingredients: query='{query}', limit={limit}")
+        # Create cache key for this search
+        cache_key = f"{query}:{limit}:{risk_level_filter}"
+        
+        # Check vector search cache first
+        with _vector_search_cache_lock:
+            if cache_key in _vector_search_cache:
+                logger.info(f"Vector search cache HIT for: '{query}'")
+                return _vector_search_cache[cache_key]
+        
+        logger.info(f"Vector search cache MISS, searching: query='{query}', limit={limit}")
         
         # Generate embedding for query
         query_embedding = await generate_query_embedding(query)
@@ -179,6 +247,11 @@ async def search_similar_ingredients(
                 return []
             
             logger.info(f"Found {len(results)} similar ingredients for query: '{query}'")
+            
+            # Store results in cache for 1 hour
+            with _vector_search_cache_lock:
+                _vector_search_cache[cache_key] = results
+            
             return results
         
         except Exception as rpc_error:

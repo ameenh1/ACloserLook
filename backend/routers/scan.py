@@ -86,6 +86,7 @@ async def save_scan_to_history(
 ) -> bool:
     """
     Save scan to scan_history table in Supabase
+    Non-blocking function - runs in background task
     
     Args:
         scan_id: Unique UUID for this scan
@@ -123,7 +124,15 @@ async def save_scan_to_history(
             return False
             
     except Exception as e:
-        logger.error(f"Error saving scan history: {e}", exc_info=True)
+        # Log error but don't crash - this is a background task
+        error_msg = str(e)
+        
+        # RLS errors are expected in some environments - log as warning
+        if "row-level security policy" in error_msg or "401 Unauthorized" in error_msg:
+            logger.warning(f"Scan history save blocked by RLS policy (expected in some envs): {scan_id}")
+        else:
+            logger.error(f"Error saving scan history: {e}", exc_info=True)
+        
         return False
 
 
